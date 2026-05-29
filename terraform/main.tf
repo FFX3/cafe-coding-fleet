@@ -6,7 +6,25 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
+    sops = {
+      source  = "carlpett/sops"
+      version = "~> 1.0"
+    }
   }
+}
+
+# Load encrypted secrets via SOPS
+# Requires age private key at ~/.config/sops/age/keys.txt
+data "sops_file" "secrets" {
+  source_file = "secrets.enc.yaml"
+}
+
+provider "cloudflare" {
+  api_token = data.sops_file.secrets.data["cloudflare_api_token"]
 }
 
 provider "google" {

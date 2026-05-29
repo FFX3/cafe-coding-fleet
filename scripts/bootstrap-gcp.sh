@@ -56,7 +56,50 @@ echo "Done! Verifying cluster..."
 kubectl get nodes
 
 echo ""
+echo "Deploying nginx ingress controller..."
+kubectl apply -f "$ROOT_DIR/apps/nginx-ingress/deploy.yaml"
+
+# Allow hostNetwork in ingress-nginx namespace. Required for the controller
+# to bind directly to ports 80/443. This is the standard pattern for
+# bare-metal/single-node ingress - only affects this namespace.
+echo "Configuring ingress-nginx namespace for hostNetwork..."
+kubectl label namespace ingress-nginx \
+    pod-security.kubernetes.io/enforce=privileged \
+    --overwrite
+
+echo "Patching ingress controller for hostNetwork..."
+kubectl patch deployment -n ingress-nginx ingress-nginx-controller \
+    --patch-file "$ROOT_DIR/apps/nginx-ingress/hostnetwork-patch.yaml"
+
+echo ""
+echo "Waiting for ingress controller rollout..."
+kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=120s
+
+echo "Waiting for admission webhook to be ready..."
+until kubectl get endpoints -n ingress-nginx ingress-nginx-controller-admission -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -q .; do
+  sleep 1
+done
+# Webhook endpoint exists but server needs a moment to start accepting connections
+sleep 5
+
+echo ""
+echo "Deploying test apps..."
+kubectl apply -f "$ROOT_DIR/apps/test-app/"
+kubectl apply -f "$ROOT_DIR/apps/test-app-2/"
+
+echo "Waiting for test apps to be ready..."
+kubectl rollout status deployment/test-app --timeout=60s
+kubectl rollout status deployment/test-app-2 --timeout=60s
+
+echo "Waiting for ingress routes to propagate..."
+sleep 3
+
+echo ""
 echo "Cluster is ready!"
+echo ""
+echo "Test the ingress:"
+echo "  curl http://test.justinmcintyre.com"
+echo "  curl http://test2.justinmcintyre.com"
 echo ""
 echo "Useful commands:"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig health"
