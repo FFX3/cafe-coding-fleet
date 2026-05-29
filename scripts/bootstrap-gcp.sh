@@ -83,6 +83,17 @@ done
 sleep 5
 
 echo ""
+echo "Deploying cert-manager..."
+kubectl apply -f "$ROOT_DIR/apps/cert-manager/deploy.yaml"
+
+echo "Waiting for cert-manager to be ready..."
+kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
+kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
+
+echo "Creating ClusterIssuer..."
+kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
+
+echo ""
 echo "Deploying test apps..."
 kubectl apply -f "$ROOT_DIR/apps/test-app/"
 kubectl apply -f "$ROOT_DIR/apps/test-app-2/"
@@ -100,6 +111,13 @@ echo ""
 echo "Test the ingress:"
 echo "  curl http://test.justinmcintyre.com"
 echo "  curl http://test2.justinmcintyre.com"
+echo ""
+echo "Test HTTPS (after certificates are issued):"
+echo "  curl https://test.justinmcintyre.com"
+echo "  curl https://test2.justinmcintyre.com"
+echo ""
+echo "Check certificate status:"
+echo "  kubectl get certificate -A"
 echo ""
 echo "Useful commands:"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig health"

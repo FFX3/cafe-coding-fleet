@@ -66,6 +66,17 @@ cluster_up() {
     sleep 5
 
     echo ""
+    echo "Deploying cert-manager..."
+    kubectl apply -f "$SCRIPT_DIR/../apps/cert-manager/deploy.yaml"
+
+    echo "Waiting for cert-manager to be ready..."
+    kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
+    kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
+
+    echo "Creating ClusterIssuer..."
+    kubectl apply -f "$SCRIPT_DIR/../apps/cert-manager/clusterissuer.yaml"
+
+    echo ""
     echo "Deploying test apps..."
     kubectl apply -f "$SCRIPT_DIR/../apps/test-app/"
     kubectl apply -f "$SCRIPT_DIR/../apps/test-app-2/"

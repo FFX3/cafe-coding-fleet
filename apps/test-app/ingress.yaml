@@ -5,8 +5,13 @@ metadata:
   namespace: default
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - test.justinmcintyre.com
+      secretName: test-app-tls
   rules:
     - host: test.justinmcintyre.com
       http:
