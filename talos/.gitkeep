@@ -1,0 +1,2 @@
+# Generated Talos configs go here
+# Run: talosctl gen config my-cluster https://<IP>:6443 --output-dir .

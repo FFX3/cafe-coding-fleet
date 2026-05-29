@@ -1,0 +1,254 @@
+{
+  "version": 4,
+  "terraform_version": "1.15.3",
+  "serial": 17,
+  "lineage": "119a25e2-c1c9-b6f5-3fcd-eb5d8fd31e0d",
+  "outputs": {
+    "data_disk": {
+      "value": "talos-data",
+      "type": "string"
+    },
+    "talos_version": {
+      "value": "v1.13.2",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "google_compute_disk",
+      "name": "data",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "access_mode": "",
+            "async_primary_disk": [],
+            "creation_timestamp": "2026-05-29T06:53:53.999-07:00",
+            "description": "",
+            "disk_encryption_key": [],
+            "disk_id": "8872930866338473118",
+            "effective_labels": {
+              "purpose": "data"
+            },
+            "enable_confidential_compute": false,
+            "guest_os_features": [],
+            "id": "projects/cafe-coding-fleet/zones/northamerica-northeast1-a/disks/talos-data",
+            "image": "",
+            "label_fingerprint": "-3d3c069ZNs=",
+            "labels": {
+              "purpose": "data"
+            },
+            "last_attach_timestamp": "",
+            "last_detach_timestamp": "",
+            "licenses": [],
+            "name": "talos-data",
+            "physical_block_size_bytes": 4096,
+            "project": "cafe-coding-fleet",
+            "provisioned_iops": 0,
+            "provisioned_throughput": 0,
+            "self_link": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/zones/northamerica-northeast1-a/disks/talos-data",
+            "size": 50,
+            "snapshot": "",
+            "source_disk": "",
+            "source_disk_id": "",
+            "source_image_encryption_key": [],
+            "source_image_id": "",
+            "source_snapshot_encryption_key": [],
+            "source_snapshot_id": "",
+            "storage_pool": "",
+            "terraform_labels": {
+              "purpose": "data"
+            },
+            "timeouts": null,
+            "type": "pd-ssd",
+            "users": [],
+            "zone": "northamerica-northeast1-a"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_firewall",
+      "name": "http_https",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "allow": [
+              {
+                "ports": [
+                  "80",
+                  "443"
+                ],
+                "protocol": "tcp"
+              }
+            ],
+            "creation_timestamp": "2026-05-29T06:53:53.960-07:00",
+            "deny": [],
+            "description": "Allow HTTP and HTTPS traffic",
+            "destination_ranges": [],
+            "direction": "INGRESS",
+            "disabled": false,
+            "enable_logging": null,
+            "id": "projects/cafe-coding-fleet/global/firewalls/http-https",
+            "log_config": [],
+            "name": "http-https",
+            "network": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/networks/default",
+            "priority": 1000,
+            "project": "cafe-coding-fleet",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/firewalls/http-https",
+            "source_ranges": [
+              "0.0.0.0/0"
+            ],
+            "source_service_accounts": [],
+            "source_tags": [],
+            "target_service_accounts": [],
+            "target_tags": [
+              "talos-node"
+            ],
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_firewall",
+      "name": "kubernetes_api",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "allow": [
+              {
+                "ports": [
+                  "6443"
+                ],
+                "protocol": "tcp"
+              }
+            ],
+            "creation_timestamp": "2026-05-29T06:53:54.413-07:00",
+            "deny": [],
+            "description": "Allow Kubernetes API access",
+            "destination_ranges": [],
+            "direction": "INGRESS",
+            "disabled": false,
+            "enable_logging": null,
+            "id": "projects/cafe-coding-fleet/global/firewalls/kubernetes-api",
+            "log_config": [],
+            "name": "kubernetes-api",
+            "network": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/networks/default",
+            "priority": 1000,
+            "project": "cafe-coding-fleet",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/firewalls/kubernetes-api",
+            "source_ranges": [
+              "0.0.0.0/0"
+            ],
+            "source_service_accounts": [],
+            "source_tags": [],
+            "target_service_accounts": [],
+            "target_tags": [
+              "talos-node"
+            ],
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_firewall",
+      "name": "talos_api",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "allow": [
+              {
+                "ports": [
+                  "50000"
+                ],
+                "protocol": "tcp"
+              }
+            ],
+            "creation_timestamp": "2026-05-29T06:53:54.561-07:00",
+            "deny": [],
+            "description": "Allow Talos API access (talosctl)",
+            "destination_ranges": [],
+            "direction": "INGRESS",
+            "disabled": false,
+            "enable_logging": null,
+            "id": "projects/cafe-coding-fleet/global/firewalls/talos-api",
+            "log_config": [],
+            "name": "talos-api",
+            "network": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/networks/default",
+            "priority": 1000,
+            "project": "cafe-coding-fleet",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/cafe-coding-fleet/global/firewalls/talos-api",
+            "source_ranges": [
+              "0.0.0.0/0"
+            ],
+            "source_service_accounts": [],
+            "source_tags": [],
+            "target_service_accounts": [],
+            "target_tags": [
+              "talos-node"
+            ],
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "terraform_data",
+      "name": "talos_image_upload",
+      "provider": "provider[\"terraform.io/builtin/terraform\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "2dfb76ca-cb37-ce53-6286-7a007e92f18c",
+            "input": null,
+            "output": null,
+            "triggers_replace": {
+              "value": [
+                "v1.13.2"
+              ],
+              "type": [
+                "tuple",
+                [
+                  "string"
+                ]
+              ]
+            }
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "dependencies": [
+            "google_storage_bucket.talos_images"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
