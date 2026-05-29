@@ -1,0 +1,21 @@
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# Talos generated configs (contain secrets)
+talos/*.yaml
+talos/talosconfig
+!talos/.gitkeep
+
+# Nix
+result
+
+# SOPS/Age keys (never commit)
+*.agekey
+keys.txt
+.config/sops/
+
+# Kubeconfig (contains credentials)
+kubeconfig
