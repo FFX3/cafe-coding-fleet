@@ -28,19 +28,27 @@ echo ""
 # Always regenerate config (IP changes on each deploy)
 echo "Generating Talos config..."
 rm -f "$TALOS_DIR"/*.yaml "$TALOS_DIR"/talosconfig
-talosctl gen config "$CLUSTER_NAME" "https://$IP:6443" --output-dir "$TALOS_DIR"
+talosctl gen config "$CLUSTER_NAME" "https://$IP:6443" \
+    --output-dir "$TALOS_DIR" \
+    --config-patch @"$TALOS_DIR/patches/disk-mount.yaml"
 
 echo ""
 echo "Applying config to node..."
 talosctl apply-config --insecure --nodes "$IP" --file "$TALOS_DIR/controlplane.yaml"
 
 echo ""
-echo "Waiting for Talos API to be ready..."
-sleep 10
-
-echo ""
 echo "Bootstrapping etcd..."
-talosctl bootstrap --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig"
+for i in {1..30}; do
+    if talosctl bootstrap --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" 2>&1; then
+        break
+    fi
+    if [[ $i -eq 30 ]]; then
+        echo "Bootstrap failed after 30 attempts"
+        exit 1
+    fi
+    echo "Bootstrap not ready yet, retrying in 5s... ($i/30)"
+    sleep 5
+done
 
 echo ""
 echo "Waiting for cluster to be ready..."
@@ -120,6 +128,16 @@ restore_certificates() {
 }
 
 restore_certificates
+
+echo ""
+echo "Deploying PostgreSQL..."
+kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
+sops --decrypt "$ROOT_DIR/apps/postgres/secret.enc.yaml" | kubectl apply -f -
+kubectl apply -f "$ROOT_DIR/apps/postgres/pv.yaml"
+kubectl apply -f "$ROOT_DIR/apps/postgres/pvc.yaml"
+kubectl apply -f "$ROOT_DIR/apps/postgres/statefulset.yaml"
+kubectl apply -f "$ROOT_DIR/apps/postgres/service.yaml"
+kubectl rollout status statefulset/postgres -n postgres --timeout=120s
 
 echo ""
 echo "Deploying test apps..."
