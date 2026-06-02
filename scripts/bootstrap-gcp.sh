@@ -7,6 +7,9 @@ TERRAFORM_DIR="$ROOT_DIR/terraform"
 TALOS_DIR="$ROOT_DIR/talos"
 CLUSTER_NAME="my-cluster"
 
+# Global flag to track if certs were restored (used by monitoring loop)
+CERTS_RESTORED=false
+
 # Get IP from terraform
 cd "$TERRAFORM_DIR"
 IP=$(terraform output -raw controlplane_external_ip)
@@ -93,6 +96,31 @@ kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout
 echo "Creating ClusterIssuer..."
 kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
 
+# Restore certificates if available (before deploying apps that create ingresses)
+restore_certificates() {
+    local CERTS_DIR="$ROOT_DIR/certs"
+
+    if ! ls "$CERTS_DIR"/*.enc.yaml >/dev/null 2>&1; then
+        echo ""
+        echo "No stored certificates found, new ones will be requested from Let's Encrypt"
+        echo ""
+        return 0
+    fi
+
+    echo ""
+    echo "Restoring stored certificates..."
+    for cert_file in "$CERTS_DIR"/*.enc.yaml; do
+        local secret_name=$(basename "$cert_file" .enc.yaml)
+        echo "  Restoring $secret_name..."
+        sops --decrypt "$cert_file" | kubectl apply -f -
+    done
+    CERTS_RESTORED=true
+    echo "Certificates restored"
+    echo ""
+}
+
+restore_certificates
+
 echo ""
 echo "Deploying test apps..."
 kubectl apply -f "$ROOT_DIR/apps/test-app/"
@@ -123,3 +151,7 @@ echo "Useful commands:"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig health"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig dashboard"
 echo "  kubectl get pods -A"
+
+# Start monitoring (pass CERTS_RESTORED to the monitoring script)
+export CERTS_RESTORED
+exec "$SCRIPT_DIR/monitor-status.sh"
