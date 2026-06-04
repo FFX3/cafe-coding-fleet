@@ -36,6 +36,15 @@
             # Secrets management
             sops
             age
+            # Frappe build dependencies
+            python314
+            python314Packages.pip
+            python314Packages.virtualenv
+            nodejs_22
+            yarn
+            git
+            pkg-config
+            libmysqlclient  # Required to build mysqlclient Python package (Frappe supports both MySQL and PostgreSQL)
           ];
 
           shellHook = ''
@@ -54,6 +63,9 @@
             echo "    ./scripts/setup-gcp-image.sh       (first time only)"
             echo "    ./scripts/cluster-up.sh            (create VM and bootstrap)"
             echo "    ./scripts/cluster-down.sh          (destroy VM, keep disks)"
+            echo ""
+            echo "  Frappe assets:"
+            echo "    ./scripts/build-frappe-assets.sh   Build and upload to GCS"
             echo ""
             echo "  View resources:"
             echo "    ./scripts/list-resources.sh"

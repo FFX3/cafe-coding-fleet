@@ -354,6 +354,8 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 - [docs/gcp-costs.md](docs/gcp-costs.md) - Cost breakdown, pricing sources, and how to verify billing
 - [docs/sops-secrets.md](docs/sops-secrets.md) - SOPS/age key management and troubleshooting
 - [docs/cloudflare-setup.md](docs/cloudflare-setup.md) - Getting Cloudflare API token and zone ID
+- [docs/frappe-sites.md](docs/frappe-sites.md) - Managing Frappe sites and apps
+- [docs/frappe-assets.md](docs/frappe-assets.md) - Pre-building Frappe assets to avoid VM OOM
 
 ## Architecture Decisions
 

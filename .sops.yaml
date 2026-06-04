@@ -1,5 +1,5 @@
 # SOPS configuration for encrypted secrets
 # See docs/sops-secrets.md for setup instructions
 creation_rules:
-  - path_regex: \.enc\.yaml$
+  - path_regex: \.enc\.(yaml|json)$
     age: age1zu2flv3yyjxkh0qn77qgc5920prykqkhjq6862mxulfa6gn2sy2q5ah4zf
