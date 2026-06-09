@@ -104,11 +104,6 @@ kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout
 echo "Creating ClusterIssuer..."
 kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
 
-# Create namespaces that may have certificates to restore
-echo ""
-echo "Creating namespaces for certificate restoration..."
-kubectl apply -f "$ROOT_DIR/apps/frappe/namespace.yaml"
-
 # Restore certificates if available (before deploying apps that create ingresses)
 restore_certificates() {
     local CERTS_DIR="$ROOT_DIR/certs"
@@ -153,64 +148,6 @@ echo "Waiting for test apps to be ready..."
 kubectl rollout status deployment/test-app --timeout=60s
 kubectl rollout status deployment/test-app-2 --timeout=60s
 
-echo ""
-echo "Deploying Frappe..."
-# Namespace already created earlier for cert restoration
-sops --decrypt "$ROOT_DIR/apps/frappe/secret.enc.yaml" | kubectl apply -f -
-
-# Create GCS credentials secret from encrypted JSON
-echo "Creating GCS credentials secret..."
-kubectl create secret generic frappe-gcs-credentials \
-    --namespace frappe \
-    --from-file=gcs-service-account.json=<(sops --decrypt "$ROOT_DIR/apps/frappe/gcs-key.enc.json") \
-    --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f "$ROOT_DIR/apps/frappe/pv.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/pvc.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/redis.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/sites-config.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/provision-script.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/deployment.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/service.yaml"
-kubectl apply -f "$ROOT_DIR/apps/frappe/ingress.yaml"
-
-echo "Waiting for Frappe Redis to be ready..."
-kubectl rollout status deployment/redis -n frappe --timeout=120s
-
-echo "Waiting for Frappe to be ready (streaming init logs)..."
-
-wait_for_frappe() {
-    local timeout=1200
-    local start_time=$(date +%s)
-
-    # Wait for pod to exist
-    echo "Waiting for Frappe pod..."
-    while true; do
-        local pod_name=$(kubectl get pod -n frappe -l app=frappe -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-        [[ -n "$pod_name" ]] && break
-        sleep 2
-    done
-    echo "Pod: $pod_name"
-
-    # Wait for provision-sites container to start, then follow its logs
-    echo "Waiting for provisioning container..."
-    while ! kubectl logs -n frappe "$pod_name" -c provision-sites 2>&1 | grep -q "Starting"; do
-        sleep 2
-    done
-
-    # Stream logs until container exits
-    echo ""
-    echo "=== Frappe Provisioning Logs ==="
-    kubectl logs -n frappe "$pod_name" -c provision-sites -f 2>/dev/null || true
-    echo "=== End Provisioning Logs ==="
-    echo ""
-
-    # Wait for deployment to be ready
-    echo "Waiting for Frappe deployment to be ready..."
-    kubectl rollout status deployment/frappe -n frappe --timeout="${timeout}s"
-}
-
-wait_for_frappe
-
 echo "Waiting for ingress routes to propagate..."
 sleep 3
 
@@ -220,12 +157,10 @@ echo ""
 echo "Test the ingress:"
 echo "  curl http://test.justinmcintyre.com"
 echo "  curl http://test2.justinmcintyre.com"
-echo "  curl http://frappe.justinmcintyre.com"
 echo ""
 echo "Test HTTPS (after certificates are issued):"
 echo "  curl https://test.justinmcintyre.com"
 echo "  curl https://test2.justinmcintyre.com"
-echo "  curl https://frappe.justinmcintyre.com"
 echo ""
 echo "Check certificate status:"
 echo "  kubectl get certificate -A"

@@ -77,7 +77,7 @@ monitor_status() {
         # Stage 1: Cluster Health
         local stage_time
         if $cluster_health_pass; then
-            stage_time=$(get_stage_time certmanager ingress testapp testapp2 frappe)
+            stage_time=$(get_stage_time certmanager ingress testapp testapp2)
             printf "[%s] Cluster Health%*s+%ds\n" "$PASS" $((35 - 14)) "" "$stage_time"
         else
             echo "[$PENDING] Cluster Health"
@@ -86,13 +86,12 @@ monitor_status() {
         if $ingress_ok; then printf "    %s ingress-nginx running%*s%s\n" "$PASS" $((35 - 21)) "" "$(format_elapsed ingress)"; else echo "    $PENDING ingress-nginx running"; fi
         if $testapp_ok; then printf "    %s test-app running%*s%s\n" "$PASS" $((35 - 16)) "" "$(format_elapsed testapp)"; else echo "    $PENDING test-app running"; fi
         if $testapp2_ok; then printf "    %s test-app-2 running%*s%s\n" "$PASS" $((35 - 18)) "" "$(format_elapsed testapp2)"; else echo "    $PENDING test-app-2 running"; fi
-        if $frappe_ok; then printf "    %s frappe running%*s%s\n" "$PASS" $((35 - 14)) "" "$(format_elapsed frappe)"; else echo "    $PENDING frappe running"; fi
         echo ""
 
         # Stage 2: Connectivity
         if $cluster_health_pass; then
             if $connectivity_pass; then
-                stage_time=$(get_stage_time ip_reachable dns1 dns2 dns_frappe)
+                stage_time=$(get_stage_time ip_reachable dns1 dns2)
                 printf "[%s] Connectivity%*s+%ds\n" "$PASS" $((35 - 12)) "" "$stage_time"
             else
                 echo "[$PENDING] Connectivity"
@@ -100,7 +99,6 @@ monitor_status() {
             if $ip_reachable; then printf "    %s Cluster IP reachable%*s%s\n" "$PASS" $((35 - 20)) "" "$(format_elapsed ip_reachable)"; else echo "    $PENDING Cluster IP reachable"; fi
             if $dns1_ok; then printf "    %s DNS: test.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 28)) "" "$(format_elapsed dns1)"; else echo "    $PENDING DNS: test.justinmcintyre.com"; fi
             if $dns2_ok; then printf "    %s DNS: test2.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 29)) "" "$(format_elapsed dns2)"; else echo "    $PENDING DNS: test2.justinmcintyre.com"; fi
-            if $dns_frappe_ok; then printf "    %s DNS: frappe.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 30)) "" "$(format_elapsed dns_frappe)"; else echo "    $PENDING DNS: frappe.justinmcintyre.com"; fi
         else
             echo "[ ] Connectivity"
             echo "    (waiting for cluster health)"
@@ -110,14 +108,13 @@ monitor_status() {
         # Stage 3: Certificates
         if $cluster_health_pass && $connectivity_pass; then
             if $certs_pass; then
-                stage_time=$(get_stage_time cert1 cert2 cert_frappe)
+                stage_time=$(get_stage_time cert1 cert2)
                 printf "[%s] Certificates%*s+%ds\n" "$PASS" $((35 - 12)) "" "$stage_time"
             else
                 echo "[$PENDING] Certificates"
             fi
             if $cert1_ok; then printf "    %s test-app-tls: Ready%*s%s\n" "$PASS" $((35 - 19)) "" "$(format_elapsed cert1)"; else echo "    $PENDING test-app-tls: Pending"; fi
             if $cert2_ok; then printf "    %s test-app-2-tls: Ready%*s%s\n" "$PASS" $((35 - 21)) "" "$(format_elapsed cert2)"; else echo "    $PENDING test-app-2-tls: Pending"; fi
-            if $cert_frappe_ok; then printf "    %s frappe-tls: Ready%*s%s\n" "$PASS" $((35 - 17)) "" "$(format_elapsed cert_frappe)"; else echo "    $PENDING frappe-tls: Pending"; fi
         else
             echo "[ ] Certificates"
             echo "    (waiting for connectivity)"
@@ -127,7 +124,7 @@ monitor_status() {
         # Stage 4: HTTPS Responses
         if $certs_pass && $cluster_health_pass && $connectivity_pass; then
             if $https_pass; then
-                stage_time=$(get_stage_time https1 https2 https_frappe)
+                stage_time=$(get_stage_time https1 https2)
                 printf "[%s] HTTPS Responses%*s+%ds\n" "$PASS" $((35 - 15)) "" "$stage_time"
             else
                 echo "[$PENDING] HTTPS Responses"
@@ -142,11 +139,6 @@ monitor_status() {
             else
                 echo "    $PENDING test2.justinmcintyre.com ($https2_code)"
             fi
-            if $https_frappe_ok; then
-                printf "    %s frappe.justinmcintyre.com (%s)%*s%s\n" "$PASS" "$https_frappe_code" $((35 - 31 - ${#https_frappe_code})) "" "$(format_elapsed https_frappe)"
-            else
-                echo "    $PENDING frappe.justinmcintyre.com ($https_frappe_code)"
-            fi
         else
             echo "[ ] HTTPS Responses"
             echo "    (waiting for certificates)"
@@ -155,18 +147,17 @@ monitor_status() {
 
         # Stage 5: Content Check
         if $https_pass && $certs_pass && $cluster_health_pass && $connectivity_pass; then
-            if $content1_ok && $content2_ok && $content_frappe_ok; then
-                stage_time=$(get_stage_time content1 content2 content_frappe)
+            if $content1_ok && $content2_ok; then
+                stage_time=$(get_stage_time content1 content2)
                 printf "[%s] Content Check%*s+%ds\n" "$PASS" $((35 - 13)) "" "$stage_time"
             else
                 echo "[$PENDING] Content Check"
             fi
             if $content1_ok; then printf "    %s test.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 23)) "" "$(format_elapsed content1)"; else echo "    $PENDING test.justinmcintyre.com"; fi
             if $content2_ok; then printf "    %s test2.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 24)) "" "$(format_elapsed content2)"; else echo "    $PENDING test2.justinmcintyre.com"; fi
-            if $content_frappe_ok; then printf "    %s frappe.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 25)) "" "$(format_elapsed content_frappe)"; else echo "    $PENDING frappe.justinmcintyre.com"; fi
 
             # Prompt to export certs if they weren't restored from storage
-            if $content1_ok && $content2_ok && $content_frappe_ok && [[ "$CERTS_RESTORED" != "true" ]]; then
+            if $content1_ok && $content2_ok && [[ "$CERTS_RESTORED" != "true" ]]; then
                 echo ""
                 echo "---"
                 echo "Certificates issued! Run this to save them for future deploys:"
@@ -184,7 +175,6 @@ monitor_status() {
         local ingress_ok=false
         local testapp_ok=false
         local testapp2_ok=false
-        local frappe_ok=false
         local cluster_health_pass=true
 
         if kubectl get pods -n cert-manager -l app=cert-manager --no-headers 2>/dev/null | grep -q Running; then
@@ -215,18 +205,10 @@ monitor_status() {
             cluster_health_pass=false
         fi
 
-        if kubectl get pods -n frappe -l app=frappe --no-headers 2>/dev/null | grep -q Running; then
-            frappe_ok=true
-            record_pass "frappe"
-        else
-            cluster_health_pass=false
-        fi
-
         # Connectivity checks
         local ip_reachable=false
         local dns1_ok=false
         local dns2_ok=false
-        local dns_frappe_ok=false
         local connectivity_pass=true
 
         if $cluster_health_pass; then
@@ -252,13 +234,6 @@ monitor_status() {
             else
                 connectivity_pass=false
             fi
-
-            if getent hosts frappe.justinmcintyre.com >/dev/null 2>&1; then
-                dns_frappe_ok=true
-                record_pass "dns_frappe"
-            else
-                connectivity_pass=false
-            fi
         else
             connectivity_pass=false
         fi
@@ -266,14 +241,12 @@ monitor_status() {
         # Certificate checks
         local cert1_ok=false
         local cert2_ok=false
-        local cert_frappe_ok=false
         local certs_pass=true
 
         if $cluster_health_pass && $connectivity_pass; then
-            local cert1_status cert2_status cert_frappe_status
+            local cert1_status cert2_status
             cert1_status=$(kubectl get certificate test-app-tls -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
             cert2_status=$(kubectl get certificate test-app-2-tls -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
-            cert_frappe_status=$(kubectl get certificate frappe-tls -n frappe -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
 
             if [[ "$cert1_status" == "True" ]]; then
                 cert1_ok=true
@@ -283,11 +256,7 @@ monitor_status() {
                 cert2_ok=true
                 record_pass "cert2"
             fi
-            if [[ "$cert_frappe_status" == "True" ]]; then
-                cert_frappe_ok=true
-                record_pass "cert_frappe"
-            fi
-            if ! $cert1_ok || ! $cert2_ok || ! $cert_frappe_ok; then
+            if ! $cert1_ok || ! $cert2_ok; then
                 certs_pass=false
             fi
         else
@@ -297,16 +266,13 @@ monitor_status() {
         # HTTPS response checks
         local https1_ok=false
         local https2_ok=false
-        local https_frappe_ok=false
         local https1_code="..."
         local https2_code="..."
-        local https_frappe_code="..."
         local https_pass=true
 
         if $certs_pass && $cluster_health_pass && $connectivity_pass; then
             https1_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://test.justinmcintyre.com" 2>/dev/null || echo "000")
             https2_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://test2.justinmcintyre.com" 2>/dev/null || echo "000")
-            https_frappe_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://frappe.justinmcintyre.com" 2>/dev/null || echo "000")
 
             # 000 means connection failed, anything else means TLS worked
             if [[ "$https1_code" != "000" ]]; then
@@ -322,13 +288,6 @@ monitor_status() {
             else
                 https_pass=false
             fi
-
-            if [[ "$https_frappe_code" != "000" ]]; then
-                https_frappe_ok=true
-                record_pass "https_frappe"
-            else
-                https_pass=false
-            fi
         else
             https_pass=false
         fi
@@ -336,7 +295,6 @@ monitor_status() {
         # Content checks
         local content1_ok=false
         local content2_ok=false
-        local content_frappe_ok=false
 
         if $https_pass && $certs_pass && $cluster_health_pass && $connectivity_pass; then
             if curl -sk https://test.justinmcintyre.com 2>/dev/null | grep -q "It works!"; then
@@ -347,19 +305,14 @@ monitor_status() {
                 content2_ok=true
                 record_pass "content2"
             fi
-            # Frappe shows login page with "Frappe" in title/content
-            if curl -sk https://frappe.justinmcintyre.com 2>/dev/null | grep -qi "frappe"; then
-                content_frappe_ok=true
-                record_pass "content_frappe"
-            fi
         fi
 
         # Build state string
-        local current_state="${certmanager_ok}${ingress_ok}${testapp_ok}${testapp2_ok}${frappe_ok}"
-        current_state+="${ip_reachable}${dns1_ok}${dns2_ok}${dns_frappe_ok}"
-        current_state+="${cert1_ok}${cert2_ok}${cert_frappe_ok}"
-        current_state+="${https1_ok}${https2_ok}${https_frappe_ok}${https1_code}${https2_code}${https_frappe_code}"
-        current_state+="${content1_ok}${content2_ok}${content_frappe_ok}"
+        local current_state="${certmanager_ok}${ingress_ok}${testapp_ok}${testapp2_ok}"
+        current_state+="${ip_reachable}${dns1_ok}${dns2_ok}"
+        current_state+="${cert1_ok}${cert2_ok}"
+        current_state+="${https1_ok}${https2_ok}${https1_code}${https2_code}"
+        current_state+="${content1_ok}${content2_ok}"
 
         # Only redraw if state changed
         if [[ "$current_state" != "$prev_state" ]]; then
@@ -369,7 +322,7 @@ monitor_status() {
         fi
 
         # Exit when all checks pass
-        if $content1_ok && $content2_ok && $content_frappe_ok; then
+        if $content1_ok && $content2_ok; then
             local total_time=$(($(date +%s) - START_TIME))
             echo ""
             echo "Total: ${total_time}s"
@@ -384,20 +337,15 @@ monitor_status() {
                 "ingress:ingress-nginx"
                 "testapp:test-app"
                 "testapp2:test-app-2"
-                "frappe:frappe"
                 "ip_reachable:Cluster IP"
                 "dns1:DNS test.justinmcintyre.com"
                 "dns2:DNS test2.justinmcintyre.com"
-                "dns_frappe:DNS frappe.justinmcintyre.com"
                 "cert1:test-app-tls"
                 "cert2:test-app-2-tls"
-                "cert_frappe:frappe-tls"
                 "https1:test.justinmcintyre.com HTTPS"
                 "https2:test2.justinmcintyre.com HTTPS"
-                "https_frappe:frappe.justinmcintyre.com HTTPS"
                 "content1:test.justinmcintyre.com content"
                 "content2:test2.justinmcintyre.com content"
-                "content_frappe:frappe.justinmcintyre.com content"
             )
 
             for entry in "${check_names[@]}"; do

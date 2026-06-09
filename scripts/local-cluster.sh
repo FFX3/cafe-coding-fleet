@@ -3,6 +3,7 @@ set -euo pipefail
 
 CLUSTER_NAME="talos-local"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 usage() {
     echo "Usage: $0 {up|down|status}"
@@ -26,9 +27,30 @@ check_docker() {
     fi
 }
 
+check_cluster_exists() {
+    # Check for actual Docker containers, not just talosctl metadata
+    if docker ps -a --format '{{.Names}}' | grep -q "^${CLUSTER_NAME}-"; then
+        echo "Error: Cluster '$CLUSTER_NAME' already exists (Docker containers found)."
+        echo ""
+        echo "To destroy and recreate:"
+        echo "  $0 down && $0 up"
+        echo ""
+        echo "To check status:"
+        echo "  $0 status"
+        exit 1
+    fi
+}
+
 cluster_up() {
     check_docker
-    echo "Creating local Talos cluster..."
+    check_cluster_exists
+
+    echo "═══════════════════════════════════════════════════════════════"
+    echo "  Creating Local Talos Cluster"
+    echo "═══════════════════════════════════════════════════════════════"
+    echo ""
+
+    echo "Creating Talos cluster..."
     talosctl cluster create docker \
         --name "$CLUSTER_NAME" \
         --workers 0 \
@@ -39,12 +61,19 @@ cluster_up() {
     kubectl taint nodes "${CLUSTER_NAME}-controlplane-1" node-role.kubernetes.io/control-plane:NoSchedule-
 
     echo ""
-    echo "Deploying nginx ingress controller..."
-    kubectl apply -f "$SCRIPT_DIR/../apps/nginx-ingress/deploy.yaml"
+    echo "Installing local-path-provisioner for storage..."
+    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+    kubectl label namespace local-path-storage pod-security.kubernetes.io/enforce=privileged --overwrite
+    # Configure to use Talos-writable path
+    kubectl patch configmap local-path-config -n local-path-storage --type=json \
+        -p='[{"op": "replace", "path": "/data/config.json", "value": "{\"nodePathMap\":[{\"node\":\"DEFAULT_PATH_FOR_NON_LISTED_NODES\",\"paths\":[\"/var/local-path-provisioner\"]}]}"}]'
+    kubectl rollout restart deployment/local-path-provisioner -n local-path-storage
+    kubectl rollout status deployment/local-path-provisioner -n local-path-storage --timeout=60s
 
-    # Allow hostNetwork in ingress-nginx namespace. Required for the controller
-    # to bind directly to ports 80/443. This is the standard pattern for
-    # bare-metal/single-node ingress - only affects this namespace.
+    echo ""
+    echo "Deploying nginx ingress controller..."
+    kubectl apply -f "$ROOT_DIR/apps/nginx-ingress/deploy.yaml"
+
     echo "Configuring ingress-nginx namespace for hostNetwork..."
     kubectl label namespace ingress-nginx \
         pod-security.kubernetes.io/enforce=privileged \
@@ -52,7 +81,7 @@ cluster_up() {
 
     echo "Patching ingress controller for hostNetwork..."
     kubectl patch deployment -n ingress-nginx ingress-nginx-controller \
-        --patch-file "$SCRIPT_DIR/../apps/nginx-ingress/hostnetwork-patch.yaml"
+        --patch-file "$ROOT_DIR/apps/nginx-ingress/hostnetwork-patch.yaml"
 
     echo ""
     echo "Waiting for ingress controller rollout..."
@@ -62,41 +91,86 @@ cluster_up() {
     until kubectl get endpoints -n ingress-nginx ingress-nginx-controller-admission -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -q .; do
       sleep 1
     done
-    # Webhook endpoint exists but server needs a moment to start accepting connections
     sleep 5
 
     echo ""
     echo "Deploying cert-manager..."
-    kubectl apply -f "$SCRIPT_DIR/../apps/cert-manager/deploy.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/cert-manager/deploy.yaml"
 
     echo "Waiting for cert-manager to be ready..."
     kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
     kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
 
     echo "Creating ClusterIssuer..."
-    kubectl apply -f "$SCRIPT_DIR/../apps/cert-manager/clusterissuer.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
 
     echo ""
     echo "Deploying test apps..."
-    kubectl apply -f "$SCRIPT_DIR/../apps/test-app/"
-    kubectl apply -f "$SCRIPT_DIR/../apps/test-app-2/"
+    kubectl apply -f "$ROOT_DIR/apps/test-app/"
+    kubectl apply -f "$ROOT_DIR/apps/test-app-2/"
 
     echo "Waiting for test apps to be ready..."
     kubectl rollout status deployment/test-app --timeout=60s
     kubectl rollout status deployment/test-app-2 --timeout=60s
 
+    echo ""
+    echo "Deploying PostgreSQL..."
+    kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
+    kubectl label namespace postgres pod-security.kubernetes.io/enforce=privileged --overwrite
+    # Create test secrets for local environment
+    kubectl create secret generic postgres-credentials \
+        --namespace postgres \
+        --from-literal=POSTGRES_PASSWORD=localtest123 \
+        --dry-run=client -o yaml | kubectl apply -f -
+    # Use local-path storage instead of hostPath
+    kubectl apply -f "$ROOT_DIR/apps/postgres/local/pvc.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/postgres/statefulset.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/postgres/service.yaml"
+    kubectl rollout status statefulset/postgres -n postgres --timeout=120s
+
+    echo ""
     echo "Waiting for ingress routes to propagate..."
     sleep 3
 
     echo ""
     echo "Running tests..."
     "$SCRIPT_DIR/test-local.sh"
+
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════"
+    echo "  Local Cluster Ready"
+    echo "═══════════════════════════════════════════════════════════════"
+    echo ""
+    echo "  Test apps available at:"
+    echo "    https://localhost (with Host: test.justinmcintyre.com)"
+    echo "    https://localhost (with Host: test2.justinmcintyre.com)"
+    echo ""
+    echo "  PostgreSQL available at:"
+    echo "    postgres.postgres.svc.cluster.local:5432"
+    echo ""
 }
 
 cluster_down() {
     check_docker
     echo "Destroying local Talos cluster..."
-    talosctl cluster destroy --name "$CLUSTER_NAME"
+    talosctl cluster destroy --name "$CLUSTER_NAME" || true
+
+    echo "Cleaning up kubeconfig entries..."
+    # Remove all talos-local contexts/clusters/users from kubeconfig
+    for ctx in $(kubectl config get-contexts -o name 2>/dev/null | grep "talos-local" || true); do
+        kubectl config delete-context "$ctx" 2>/dev/null || true
+    done
+    for cluster in $(kubectl config get-clusters 2>/dev/null | grep "talos-local" || true); do
+        kubectl config delete-cluster "$cluster" 2>/dev/null || true
+    done
+    for user in $(kubectl config view -o jsonpath='{.users[*].name}' 2>/dev/null | tr ' ' '\n' | grep "talos-local" || true); do
+        kubectl config delete-user "$user" 2>/dev/null || true
+    done
+
+    echo "Cleaning up talosconfig..."
+    rm -f ~/.talos/config
+    rm -rf ~/.talos/clusters/talos-local*
+
     echo "Cluster destroyed."
 }
 

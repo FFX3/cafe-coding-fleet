@@ -18,12 +18,3 @@ resource "cloudflare_record" "test2" {
   ttl     = 60
   proxied = false
 }
-
-resource "cloudflare_record" "frappe" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "frappe"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
