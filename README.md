@@ -107,10 +107,31 @@ All other tools (talosctl, kubectl, terraform, gcloud, sops, age) are provided b
 
 ## Quick Start
 
-### Enter Development Environment
+### Running Commands
+
+All commands can be run via `nix run` without entering a shell:
 
 ```bash
-cd /home/justinm/infrastructure
+# GCP cluster
+nix run .#cluster-up
+nix run .#cluster-down
+
+# Local Docker cluster
+nix run .#local-cluster -- up
+nix run .#local-cluster -- down
+
+# Deploy applications
+nix run .#deploy-apps
+
+# Utilities
+nix run .#dashboard
+nix run .#db-connect
+nix run .#list-resources
+```
+
+For interactive work, enter the dev shell:
+
+```bash
 nix develop
 ```
 
@@ -119,7 +140,7 @@ This gives you: `talosctl`, `kubectl`, `terraform`, `gcloud`, `sops`, `age`
 ### Authenticate with GCP (first time only)
 
 ```bash
-gcloud auth application-default login
+nix develop -c gcloud auth application-default login
 ```
 
 ### Option A: Local Cluster (Docker)
@@ -127,24 +148,25 @@ gcloud auth application-default login
 For testing without GCP costs:
 
 ```bash
-# Create single-node cluster locally
-./scripts/local-cluster.sh up
+nix run .#local-cluster -- up
 
-# Verify it works
+# Verify (inside nix develop)
+nix develop
 talosctl --nodes 10.5.0.2 health
 kubectl get nodes
 
-# Tear down when done
-./scripts/local-cluster.sh down
+# Tear down
+nix run .#local-cluster -- down
 ```
 
 ### Option B: GCP Cluster (Production)
 
 ```bash
-# 1. Create cluster (first run creates persistent disk, bucket, and Talos image)
-./scripts/cluster-up.sh
+# Create cluster (first run creates persistent disk, bucket, and Talos image)
+nix run .#cluster-up
 
-# 2. Verify
+# Verify (inside nix develop)
+nix develop
 kubectl get nodes
 kubectl get pods -A
 ```
