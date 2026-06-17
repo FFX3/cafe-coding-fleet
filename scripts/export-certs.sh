@@ -8,7 +8,7 @@ CERTS_DIR="$ROOT_DIR/certs"
 mkdir -p "$CERTS_DIR"
 
 # List of certificate secrets to export (format: "namespace:secret" or just "secret" for default namespace)
-CERT_SECRETS=("default:test-app-tls" "default:test-app-2-tls")
+CERT_SECRETS=("default:test-app-tls" "default:test-app-2-tls" "twenty:twenty-tls")
 
 for entry in "${CERT_SECRETS[@]}"; do
     # Parse namespace and secret name

@@ -51,6 +51,21 @@ pass "test2.justinmcintyre.com returns 200"
 curl -sk -H "Host: test2.justinmcintyre.com" "$ENDPOINT" | grep -q "App Two!" || fail "test2.justinmcintyre.com: wrong content"
 pass "test2.justinmcintyre.com content verified"
 
+# Twenty CRM checks
+kubectl get pods -n twenty -l app=twenty-server | grep -q Running || fail "Twenty server not running"
+pass "Twenty server running"
+
+kubectl get pods -n twenty -l app=twenty-worker | grep -q Running || fail "Twenty worker not running"
+pass "Twenty worker running"
+
+kubectl get pods -n twenty -l app=redis | grep -q Running || fail "Twenty Redis not running"
+pass "Twenty Redis running"
+
+# Test Twenty via localhost (crm.justinmcintyre.com)
+RESPONSE=$(curl -sk -o /dev/null -w "%{http_code}" -H "Host: crm.justinmcintyre.com" "$ENDPOINT/healthz") || fail "curl failed"
+[[ "$RESPONSE" == "200" ]] || fail "crm.justinmcintyre.com/healthz: expected 200, got $RESPONSE"
+pass "crm.justinmcintyre.com/healthz returns 200"
+
 echo ""
 echo -e "${GREEN}All tests passed! Host-based routing works.${NC}"
 echo ""

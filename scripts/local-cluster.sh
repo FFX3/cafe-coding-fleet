@@ -129,6 +129,41 @@ cluster_up() {
     kubectl rollout status statefulset/postgres -n postgres --timeout=120s
 
     echo ""
+    echo "Creating Twenty database and user..."
+    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='twenty'" | grep -q 1 || \
+        kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER twenty WITH ENCRYPTED PASSWORD 'localtest123'"
+    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='twenty'" | grep -q 1 || \
+        kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE twenty OWNER twenty"
+    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d twenty -c "GRANT ALL ON SCHEMA public TO twenty"
+
+    echo ""
+    echo "Deploying Twenty CRM..."
+    kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
+    # Create test secrets for local environment
+    kubectl create secret generic twenty-credentials \
+        --namespace twenty \
+        --from-literal=PG_DATABASE_URL=postgres://twenty:localtest123@postgres.postgres.svc.cluster.local:5432/twenty \
+        --from-literal=APP_SECRET=local-test-app-secret-32chars-ok \
+        --from-literal=ACCESS_TOKEN_SECRET=local-access-token-secret-32chars \
+        --from-literal=LOGIN_TOKEN_SECRET=local-login-token-secret-32chars! \
+        --from-literal=REFRESH_TOKEN_SECRET=local-refresh-token-secret-32ch \
+        --from-literal=FILE_TOKEN_SECRET=local-file-token-secret-32chars!! \
+        --dry-run=client -o yaml | kubectl apply -f -
+    # Use local-path storage instead of hostPath
+    kubectl apply -f "$ROOT_DIR/apps/twenty/redis/local/pvc.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/redis/statefulset.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/redis/service.yaml"
+    kubectl rollout status statefulset/redis -n twenty --timeout=120s
+    kubectl apply -f "$ROOT_DIR/apps/twenty/server/local/pvc.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/server/deployment.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/server/service.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/worker/deployment.yaml"
+    kubectl apply -f "$ROOT_DIR/apps/twenty/ingress.yaml"
+    echo "Waiting for Twenty server to be ready (migrations may take a while)..."
+    kubectl rollout status deployment/twenty-server -n twenty --timeout=300s
+    kubectl rollout status deployment/twenty-worker -n twenty --timeout=120s
+
+    echo ""
     echo "Waiting for ingress routes to propagate..."
     sleep 3
 
@@ -144,6 +179,9 @@ cluster_up() {
     echo "  Test apps available at:"
     echo "    https://localhost (with Host: test.justinmcintyre.com)"
     echo "    https://localhost (with Host: test2.justinmcintyre.com)"
+    echo ""
+    echo "  Twenty CRM available at:"
+    echo "    https://localhost (with Host: crm.justinmcintyre.com)"
     echo ""
     echo "  PostgreSQL available at:"
     echo "    postgres.postgres.svc.cluster.local:5432"
