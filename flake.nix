@@ -87,6 +87,7 @@
           deploy-cert-manager = mkApp "deploy-cert-manager" "Deploy cert-manager" "scripts/deploy-cert-manager.sh";
           deploy-postgres = mkApp "deploy-postgres" "Deploy PostgreSQL" "scripts/deploy-postgres.sh";
           deploy-twenty = mkApp "deploy-twenty" "Deploy Twenty CRM" "scripts/deploy-twenty.sh";
+          deploy-conduit = mkApp "deploy-conduit" "Deploy Conduit Matrix server" "scripts/deploy-conduit.sh";
           deploy-test-apps = mkApp "deploy-test-apps" "Deploy test applications" "scripts/deploy-test-apps.sh";
 
           # Utilities

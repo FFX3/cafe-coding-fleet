@@ -19,6 +19,9 @@ echo ""
 "$SCRIPT_DIR/deploy-twenty.sh"
 echo ""
 
+"$SCRIPT_DIR/deploy-conduit.sh"
+echo ""
+
 "$SCRIPT_DIR/deploy-test-apps.sh"
 echo ""
 

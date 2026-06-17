@@ -28,7 +28,7 @@ gcloud asset search-all-resources --project=cafe-coding-fleet
 
 ## Cost Breakdown
 
-**Estimated Total: ~$50/month USD**
+**Estimated Total: ~$70/month CAD**
 
 Use the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) for accurate estimates.
 
@@ -36,11 +36,11 @@ Region: `northamerica-northeast1` (Montreal)
 
 | Resource | Spec |
 |----------|------|
-| VM | e2-medium (2 vCPU, 4GB), 730 hrs/month |
-| Boot disk | 10GB pd-standard |
+| VM | e2-standard-2 (2 vCPU, 8GB), 730 hrs/month |
+| Boot disk | 20GB pd-standard |
 | Data disk | 20GB pd-ssd |
 | GCS bucket | ~1GB (Talos image) |
-| Firewall rules | 3 rules (free) |
+| Firewall rules | 4 rules (free) |
 | External IP | Ephemeral while attached (free) |
 
 ## Pricing Sources

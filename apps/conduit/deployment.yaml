@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conduit
+  namespace: conduit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: conduit
+  template:
+    metadata:
+      labels:
+        app: conduit
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: fix-permissions
+          image: busybox:1.36
+          command: ["sh", "-c", "chown -R 1000:1000 /var/lib/matrix-conduit"]
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: conduit-data
+              mountPath: /var/lib/matrix-conduit
+      containers:
+        - name: conduit
+          image: docker.io/matrixconduit/matrix-conduit:latest
+          ports:
+            - containerPort: 6167
+          envFrom:
+            - secretRef:
+                name: conduit-credentials
+          env:
+            - name: CONDUIT_SERVER_NAME
+              value: "matrix.justinmcintyre.com"
+            - name: CONDUIT_DATABASE_BACKEND
+              value: "rocksdb"
+            - name: CONDUIT_DATABASE_PATH
+              value: "/var/lib/matrix-conduit"
+            - name: CONDUIT_PORT
+              value: "6167"
+            - name: CONDUIT_ADDRESS
+              value: "0.0.0.0"
+            - name: CONDUIT_ALLOW_REGISTRATION
+              value: "true"
+            - name: CONDUIT_ALLOW_FEDERATION
+              value: "true"
+            - name: CONDUIT_TRUSTED_SERVERS
+              value: '["matrix.org"]'
+            - name: CONDUIT_MAX_REQUEST_SIZE
+              value: "20000000"
+            - name: CONDUIT_CONFIG
+              value: ""
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: conduit-data
+              mountPath: /var/lib/matrix-conduit
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 6167
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 6167
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 6167
+            periodSeconds: 10
+      volumes:
+        - name: conduit-data
+          persistentVolumeClaim:
+            claimName: conduit-pvc

@@ -266,8 +266,11 @@ Terraform is split into `persistent/` and `compute/` projects specifically for t
 
 | State | Monthly Cost |
 |-------|-------------|
-| Running | ~$50 (VM + disk) |
-| Shut down | ~$4 (disk only) |
+| Running 24/7 | ~$70 CAD |
+| Running 8hrs/day weekdays | ~$20 CAD |
+| Shut down | ~$4 CAD (disk only) |
+
+Part-time math: Compute is ~$66 CAD for 730 hrs (~$0.09/hr). 8 hrs × 5 days × 4.33 weeks = 173 hrs × $0.09 = ~$16 + $4 disk = ~$20 CAD.
 
 ```bash
 # Destroy VM, firewall, DNS (keeps persistent disk)
@@ -430,7 +433,7 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 
 ## Cost Estimate
 
-~$50/month USD. See [docs/gcp-costs.md](docs/gcp-costs.md) for details and pricing sources.
+~$70/month CAD. See [docs/gcp-costs.md](docs/gcp-costs.md) for details and pricing sources.
 
 ## Milestones
 
