@@ -16,7 +16,7 @@ resource "google_compute_instance" "talos_controlplane" {
   }
 
   attached_disk {
-    source      = google_compute_disk.data.self_link
+    source      = data.google_compute_disk.data.self_link
     device_name = "data"
     mode        = "READ_WRITE"
   }

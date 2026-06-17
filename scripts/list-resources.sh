@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/internal/require-env.sh"
 
 PROJECT_ID="cafe-coding-fleet"
 

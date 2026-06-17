@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/internal/require-env.sh"
 
 NAMESPACE="postgres"
 SERVICE="postgres"

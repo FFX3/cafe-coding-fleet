@@ -2,8 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-TERRAFORM_DIR="$ROOT_DIR/terraform"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
 TALOS_DIR="$ROOT_DIR/talos"
 CLUSTER_NAME="my-cluster"
 
@@ -16,7 +16,7 @@ IP=$(terraform output -raw controlplane_external_ip)
 
 if [[ -z "$IP" ]]; then
     echo "Error: Could not get IP from terraform output"
-    echo "Make sure you've run: cd terraform && terraform apply"
+    echo "Make sure you've run: cd terraform/compute && terraform apply"
     exit 1
 fi
 
@@ -25,46 +25,60 @@ echo "==================="
 echo "Node IP: $IP"
 echo ""
 
-# Always regenerate config (IP changes on each deploy)
-echo "Generating Talos config..."
-rm -f "$TALOS_DIR"/*.yaml "$TALOS_DIR"/talosconfig
-talosctl gen config "$CLUSTER_NAME" "https://$IP:6443" \
-    --output-dir "$TALOS_DIR" \
-    --config-patch @"$TALOS_DIR/patches/disk-mount.yaml"
-
-echo ""
-echo "Applying config to node..."
-talosctl apply-config --insecure --nodes "$IP" --file "$TALOS_DIR/controlplane.yaml"
-
-echo ""
-echo "Bootstrapping etcd..."
-for i in {1..30}; do
-    if talosctl bootstrap --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" 2>&1; then
-        break
+# Check if cluster is already running with existing config
+CLUSTER_RUNNING=false
+if [[ -f "$TALOS_DIR/talosconfig" ]]; then
+    echo "Checking if cluster is already running..."
+    if talosctl health --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --wait-timeout 10s &>/dev/null; then
+        echo "Cluster is already running, skipping bootstrap."
+        CLUSTER_RUNNING=true
+        # Ensure kubeconfig is up to date
+        talosctl kubeconfig --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --force
     fi
-    if [[ $i -eq 30 ]]; then
-        echo "Bootstrap failed after 30 attempts"
-        exit 1
-    fi
-    echo "Bootstrap not ready yet, retrying in 5s... ($i/30)"
-    sleep 5
-done
+fi
 
-echo ""
-echo "Waiting for cluster to be ready..."
-talosctl health --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --wait-timeout 5m
+if [[ "$CLUSTER_RUNNING" == "false" ]]; then
+    # Generate config (IP changes on each deploy)
+    echo "Generating Talos config..."
+    rm -f "$TALOS_DIR"/*.yaml "$TALOS_DIR"/talosconfig
+    talosctl gen config "$CLUSTER_NAME" "https://$IP:6443" \
+        --output-dir "$TALOS_DIR" \
+        --config-patch @"$TALOS_DIR/patches/disk-mount.yaml"
 
-echo ""
-echo "Getting kubeconfig..."
-talosctl kubeconfig --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --force
+    echo ""
+    echo "Applying config to node..."
+    talosctl apply-config --insecure --nodes "$IP" --file "$TALOS_DIR/controlplane.yaml"
 
-echo ""
-echo "Removing control-plane taint (single-node cluster needs to run workloads)..."
-kubectl taint nodes talos-controlplane node-role.kubernetes.io/control-plane:NoSchedule-
+    echo ""
+    echo "Bootstrapping etcd..."
+    for i in {1..30}; do
+        if talosctl bootstrap --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" 2>&1; then
+            break
+        fi
+        if [[ $i -eq 30 ]]; then
+            echo "Bootstrap failed after 30 attempts"
+            exit 1
+        fi
+        echo "Bootstrap not ready yet, retrying in 5s... ($i/30)"
+        sleep 5
+    done
 
-echo ""
-echo "Done! Verifying cluster..."
-kubectl get nodes
+    echo ""
+    echo "Waiting for cluster to be ready..."
+    talosctl health --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --wait-timeout 5m
+
+    echo ""
+    echo "Getting kubeconfig..."
+    talosctl kubeconfig --nodes "$IP" --endpoints "$IP" --talosconfig "$TALOS_DIR/talosconfig" --force
+
+    echo ""
+    echo "Removing control-plane taint (single-node cluster needs to run workloads)..."
+    kubectl taint nodes talos-controlplane node-role.kubernetes.io/control-plane:NoSchedule- 2>/dev/null || true
+
+    echo ""
+    echo "Verifying cluster..."
+    kubectl get nodes
+fi
 
 echo ""
 echo "Deploying nginx ingress controller..."
@@ -207,4 +221,4 @@ echo "  kubectl get pods -A"
 
 # Start monitoring (pass CERTS_RESTORED to the monitoring script)
 export CERTS_RESTORED
-exec "$SCRIPT_DIR/monitor-status.sh"
+exec "$ROOT_DIR/scripts/monitor-status.sh"

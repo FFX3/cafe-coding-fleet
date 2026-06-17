@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/internal/require-env.sh"
 
 CLUSTER_NAME="talos-local"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -170,7 +171,7 @@ cluster_up() {
 
     echo ""
     echo "Running tests..."
-    "$SCRIPT_DIR/test-local.sh"
+    "$SCRIPT_DIR/internal/test-local.sh"
 
     echo ""
     echo "═══════════════════════════════════════════════════════════════"

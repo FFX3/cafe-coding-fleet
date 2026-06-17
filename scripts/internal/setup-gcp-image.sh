@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+PERSISTENT_DIR="$ROOT_DIR/terraform/persistent"
+
+# Get config from terraform
+cd "$PERSISTENT_DIR"
+PROJECT_ID=$(terraform output -raw project_id)
+REGION=$(terraform output -raw region)
+
+# Temporary bucket for image upload (cleaned up after)
+BUCKET_NAME="${PROJECT_ID}-talos-image-upload"
+
+# Talos version
 TALOS_VERSION="v1.13.2"
-PROJECT_ID="cafe-coding-fleet"
-BUCKET_NAME="${PROJECT_ID}-talos-images"
-REGION="northamerica-northeast1"
 
 # Default schematic ID (vanilla Talos, no extensions)
 # Get custom ones from https://factory.talos.dev/
@@ -27,24 +36,25 @@ if gcloud compute images describe "$IMAGE_NAME" --project="$PROJECT_ID" &>/dev/n
     exit 0
 fi
 
-# Create bucket if it doesn't exist
-if ! gsutil ls "gs://${BUCKET_NAME}" &>/dev/null; then
-    echo "Creating GCS bucket..."
-    gsutil mb -l "$REGION" "gs://${BUCKET_NAME}"
-fi
+# Create temporary bucket
+echo "Creating temporary GCS bucket..."
+gsutil mb -l "$REGION" "gs://${BUCKET_NAME}"
 
-# Download and upload if not in GCS
-if ! gsutil stat "$GCS_PATH" &>/dev/null; then
-    echo "Downloading Talos image from factory.talos.dev..."
-    echo "URL: $IMAGE_URL"
-    curl -L --progress-bar -o /tmp/talos-gcp.raw.tar.gz "$IMAGE_URL"
+# Cleanup on exit (success or failure)
+cleanup() {
+    echo "Cleaning up temporary bucket..."
+    gsutil rm -r "gs://${BUCKET_NAME}" 2>/dev/null || true
+}
+trap cleanup EXIT
 
-    echo "Uploading to GCS..."
-    gsutil cp /tmp/talos-gcp.raw.tar.gz "$GCS_PATH"
-    rm /tmp/talos-gcp.raw.tar.gz
-else
-    echo "Image already in GCS bucket."
-fi
+# Download and upload
+echo "Downloading Talos image from factory.talos.dev..."
+echo "URL: $IMAGE_URL"
+curl -L --progress-bar -o /tmp/talos-gcp.raw.tar.gz "$IMAGE_URL"
+
+echo "Uploading to GCS..."
+gsutil cp /tmp/talos-gcp.raw.tar.gz "$GCS_PATH"
+rm /tmp/talos-gcp.raw.tar.gz
 
 # Create GCP compute image
 echo "Creating GCP compute image..."
@@ -55,4 +65,3 @@ gcloud compute images create "$IMAGE_NAME" \
 
 echo ""
 echo "Done! Image '$IMAGE_NAME' is ready."
-echo "You can now run: cd terraform && terraform apply"

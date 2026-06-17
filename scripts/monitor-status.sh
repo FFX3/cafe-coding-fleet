@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-TERRAFORM_DIR="$ROOT_DIR/terraform"
+TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
 
 # Benchmarking: track when monitoring started
 START_TIME=$(date +%s)
@@ -167,12 +168,11 @@ monitor_status() {
             if $content2_ok; then printf "    %s test2.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 24)) "" "$(format_elapsed content2)"; else echo "    $PENDING test2.justinmcintyre.com"; fi
             if $content_crm_ok; then printf "    %s crm.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 22)) "" "$(format_elapsed content_crm)"; else echo "    $PENDING crm.justinmcintyre.com"; fi
 
-            # Prompt to export certs if they weren't restored from storage
+            # Note about cert export if they weren't restored from storage
             if $content1_ok && $content2_ok && $content_crm_ok && [[ "$CERTS_RESTORED" != "true" ]]; then
                 echo ""
                 echo "---"
-                echo "Certificates issued! Run this to save them for future deploys:"
-                echo "  ./scripts/export-certs.sh"
+                echo "New certificates issued. They will be exported automatically on cluster-down."
             fi
         else
             echo "[ ] Content Check"

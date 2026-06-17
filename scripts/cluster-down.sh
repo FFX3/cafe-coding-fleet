@@ -1,24 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TERRAFORM_DIR="$(dirname "$SCRIPT_DIR")/terraform"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+PERSISTENT_DIR="$ROOT_DIR/terraform/persistent"
+COMPUTE_DIR="$ROOT_DIR/terraform/compute"
 
-echo "Shutting down GCP cluster (keeping disks)..."
-echo "============================================="
+echo "Shutting down GCP cluster (keeping persistent disk)..."
+echo "======================================================="
 echo ""
-echo "This destroys the VM but keeps:"
-echo "  - Data disk (talos-data)"
-echo "  - Talos image"
-echo "  - GCS bucket"
+echo "This destroys:"
+echo "  - VM instance"
 echo "  - Firewall rules"
+echo "  - DNS records"
 echo ""
-echo "To bring it back: terraform apply && ./scripts/bootstrap-gcp.sh"
+echo "This keeps (in terraform/persistent):"
+echo "  - Data disk (talos-data)"
+echo "  - Artifacts bucket"
+echo ""
+echo "Cost savings: ~\$50/month -> ~\$4/month (disk only)"
+echo ""
+echo "To bring it back: ./scripts/cluster-up.sh"
 echo ""
 
-cd "$TERRAFORM_DIR"
+# Export certificates before destroying
+echo "Exporting certificates..."
+"$ROOT_DIR/scripts/internal/export-certs.sh" || echo "Warning: Failed to export certs (cluster may not be reachable)"
+echo ""
 
-terraform destroy -target=google_compute_instance.talos_controlplane
+# Get config from persistent
+cd "$PERSISTENT_DIR"
+PROJECT_ID=$(terraform output -raw project_id)
+REGION=$(terraform output -raw region)
+ZONE=$(terraform output -raw zone)
+
+cd "$COMPUTE_DIR"
+terraform destroy \
+    -var="project_id=$PROJECT_ID" \
+    -var="region=$REGION" \
+    -var="zone=$ZONE"
 
 echo ""
-echo "VM destroyed. You're now only paying for disk storage."
+echo "Compute resources destroyed. You're now only paying for disk storage."

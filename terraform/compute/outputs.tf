@@ -13,11 +13,6 @@ output "talos_version" {
   value       = local.talos_version
 }
 
-output "data_disk" {
-  description = "Data disk name"
-  value       = google_compute_disk.data.name
-}
-
 output "data_disk_device_path" {
   description = "Device path for the data disk (for Talos disk mount config)"
   value       = "/dev/disk/by-id/scsi-0Google_PersistentDisk_${google_compute_instance.talos_controlplane.attached_disk[0].device_name}"

@@ -42,6 +42,8 @@
           ];
 
           shellHook = ''
+            export INFRA_SHELL=1
+
             echo ""
             echo "══════════════════════════════════════════════════════════════════"
             echo "  Infrastructure Environment"

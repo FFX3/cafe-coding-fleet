@@ -37,9 +37,3 @@ provider "google" {
 locals {
   talos_version = "v1.13.2"
 }
-
-# Reference the Talos image (created by scripts/setup-gcp-image.sh)
-data "google_compute_image" "talos" {
-  name    = "talos-${replace(local.talos_version, ".", "-")}"
-  project = var.project_id
-}
