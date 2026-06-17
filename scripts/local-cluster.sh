@@ -148,6 +148,7 @@ cluster_up() {
         --from-literal=LOGIN_TOKEN_SECRET=local-login-token-secret-32chars! \
         --from-literal=REFRESH_TOKEN_SECRET=local-refresh-token-secret-32ch \
         --from-literal=FILE_TOKEN_SECRET=local-file-token-secret-32chars!! \
+        --from-literal=ENCRYPTION_KEY=local-encryption-key-32chars-ok! \
         --dry-run=client -o yaml | kubectl apply -f -
     # Use local-path storage instead of hostPath
     kubectl apply -f "$ROOT_DIR/apps/twenty/redis/local/pvc.yaml"

@@ -104,6 +104,12 @@ kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout
 echo "Creating ClusterIssuer..."
 kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
 
+# Create namespaces that will hold TLS certificates (before restoring certs)
+echo ""
+echo "Creating application namespaces..."
+kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
+
 # Restore certificates if available (before deploying apps that create ingresses)
 restore_certificates() {
     local CERTS_DIR="$ROOT_DIR/certs"

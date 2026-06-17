@@ -372,5 +372,5 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 
 1. ~~Milestone 1: Talos Bootstrap~~
 2. ~~Milestone 2: Cloudflare DNS + Nginx Ingress~~
-3. Milestone 3: PostgreSQL with persistent storage
+3. ~~Milestone 3: PostgreSQL with persistent storage~~
 4. Milestone 4: Frappe/ERPNext deployment
