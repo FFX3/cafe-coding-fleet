@@ -80,43 +80,12 @@ if [[ "$CLUSTER_RUNNING" == "false" ]]; then
     kubectl get nodes
 fi
 
+# Deploy infrastructure components
 echo ""
-echo "Deploying nginx ingress controller..."
-kubectl apply -f "$ROOT_DIR/apps/nginx-ingress/deploy.yaml"
-
-# Allow hostNetwork in ingress-nginx namespace. Required for the controller
-# to bind directly to ports 80/443. This is the standard pattern for
-# bare-metal/single-node ingress - only affects this namespace.
-echo "Configuring ingress-nginx namespace for hostNetwork..."
-kubectl label namespace ingress-nginx \
-    pod-security.kubernetes.io/enforce=privileged \
-    --overwrite
-
-echo "Patching ingress controller for hostNetwork..."
-kubectl patch deployment -n ingress-nginx ingress-nginx-controller \
-    --patch-file "$ROOT_DIR/apps/nginx-ingress/hostnetwork-patch.yaml"
+"$ROOT_DIR/scripts/deploy-ingress.sh"
 
 echo ""
-echo "Waiting for ingress controller rollout..."
-kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=120s
-
-echo "Waiting for admission webhook to be ready..."
-until kubectl get endpoints -n ingress-nginx ingress-nginx-controller-admission -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -q .; do
-  sleep 1
-done
-# Webhook endpoint exists but server needs a moment to start accepting connections
-sleep 5
-
-echo ""
-echo "Deploying cert-manager..."
-kubectl apply -f "$ROOT_DIR/apps/cert-manager/deploy.yaml"
-
-echo "Waiting for cert-manager to be ready..."
-kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
-kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
-
-echo "Creating ClusterIssuer..."
-kubectl apply -f "$ROOT_DIR/apps/cert-manager/clusterissuer.yaml"
+"$ROOT_DIR/scripts/deploy-cert-manager.sh"
 
 # Create namespaces that will hold TLS certificates (before restoring certs)
 echo ""
@@ -149,53 +118,15 @@ restore_certificates() {
 
 restore_certificates
 
+# Deploy applications
 echo ""
-echo "Deploying PostgreSQL..."
-kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
-sops --decrypt "$ROOT_DIR/apps/postgres/secret.enc.yaml" | kubectl apply -f -
-kubectl apply -f "$ROOT_DIR/apps/postgres/pv.yaml"
-kubectl apply -f "$ROOT_DIR/apps/postgres/pvc.yaml"
-kubectl apply -f "$ROOT_DIR/apps/postgres/statefulset.yaml"
-kubectl apply -f "$ROOT_DIR/apps/postgres/service.yaml"
-kubectl rollout status statefulset/postgres -n postgres --timeout=120s
+"$ROOT_DIR/scripts/deploy-postgres.sh"
 
 echo ""
-echo "Creating Twenty database and user..."
-# Extract twenty password from PG_DATABASE_URL (format: postgres://user:pass@host:port/db)
-TWENTY_PASSWORD=$(sops --decrypt "$ROOT_DIR/apps/twenty/secret.enc.yaml" | grep PG_DATABASE_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='twenty'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER twenty WITH ENCRYPTED PASSWORD '$TWENTY_PASSWORD'"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='twenty'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE twenty OWNER twenty"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d twenty -c "GRANT ALL ON SCHEMA public TO twenty"
+"$ROOT_DIR/scripts/deploy-twenty.sh"
 
 echo ""
-echo "Deploying Twenty CRM..."
-kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
-sops --decrypt "$ROOT_DIR/apps/twenty/secret.enc.yaml" | kubectl apply -f -
-kubectl apply -f "$ROOT_DIR/apps/twenty/redis/pv.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/redis/pvc.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/redis/statefulset.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/redis/service.yaml"
-kubectl rollout status statefulset/redis -n twenty --timeout=120s
-kubectl apply -f "$ROOT_DIR/apps/twenty/server/pv.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/server/pvc.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/server/deployment.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/server/service.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/worker/deployment.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/ingress.yaml"
-echo "Waiting for Twenty server to be ready (migrations may take a while)..."
-kubectl rollout status deployment/twenty-server -n twenty --timeout=300s
-kubectl rollout status deployment/twenty-worker -n twenty --timeout=120s
-
-echo ""
-echo "Deploying test apps..."
-kubectl apply -f "$ROOT_DIR/apps/test-app/"
-kubectl apply -f "$ROOT_DIR/apps/test-app-2/"
-
-echo "Waiting for test apps to be ready..."
-kubectl rollout status deployment/test-app --timeout=60s
-kubectl rollout status deployment/test-app-2 --timeout=60s
+"$ROOT_DIR/scripts/deploy-test-apps.sh"
 
 echo "Waiting for ingress routes to propagate..."
 sleep 3

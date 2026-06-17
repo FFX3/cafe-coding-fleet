@@ -59,6 +59,12 @@ infrastructure/
 │   ├── cluster-up.sh            # Start GCP cluster
 │   ├── cluster-down.sh          # Stop GCP cluster (exports certs, saves costs)
 │   ├── local-cluster.sh         # Start/stop local Docker cluster
+│   ├── deploy-apps.sh           # Deploy all applications
+│   ├── deploy-ingress.sh        # Deploy nginx ingress controller
+│   ├── deploy-cert-manager.sh   # Deploy cert-manager
+│   ├── deploy-postgres.sh       # Deploy PostgreSQL
+│   ├── deploy-twenty.sh         # Deploy Twenty CRM
+│   ├── deploy-test-apps.sh      # Deploy test applications
 │   ├── monitor-status.sh        # Monitor cluster health and certs
 │   ├── dashboard.sh             # Open Talos dashboard
 │   ├── db-connect.sh            # Connect to PostgreSQL
@@ -68,7 +74,8 @@ infrastructure/
 │       ├── bootstrap-gcp.sh     # Called by cluster-up.sh
 │       ├── setup-gcp-image.sh   # Called by cluster-up.sh
 │       ├── test-local.sh        # Called by local-cluster.sh
-│       └── export-certs.sh      # Called by cluster-down.sh
+│       ├── export-certs.sh      # Called by cluster-down.sh
+│       └── require-env.sh       # Ensures scripts run in nix shell
 ├── docs/
 │   ├── kubernetes-basics.md     # Pods, nodes, taints explained for single-node setup
 │   ├── gcp-costs.md             # Cost breakdown with pricing sources
@@ -179,6 +186,24 @@ Terraform is split into two projects for cost savings (see "Shut Down to Save Co
 | 443 | TCP | HTTPS (for ingress) |
 
 ## Common Operations
+
+### Redeploy Applications
+
+If you've made changes to app manifests and want to redeploy without full bootstrap:
+
+```bash
+# Redeploy everything
+./scripts/deploy-apps.sh
+
+# Or redeploy individual components
+./scripts/deploy-ingress.sh
+./scripts/deploy-cert-manager.sh
+./scripts/deploy-postgres.sh
+./scripts/deploy-twenty.sh
+./scripts/deploy-test-apps.sh
+```
+
+All deploy scripts are idempotent - running them on an already-deployed app applies any changes.
 
 ### Check Cluster Health
 
@@ -385,9 +410,33 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 
 ~$50/month USD. See [docs/gcp-costs.md](docs/gcp-costs.md) for details and pricing sources.
 
-## Next Steps (Future Milestones)
+## Milestones
 
-1. ~~Milestone 1: Talos Bootstrap~~
-2. ~~Milestone 2: Cloudflare DNS + Nginx Ingress~~
-3. ~~Milestone 3: PostgreSQL with persistent storage~~
-4. ~~Milestone 4: Twenty CRM deployment~~
+### Completed
+
+1. ~~Talos Bootstrap~~ - Single-node Kubernetes on GCP
+2. ~~Cloudflare DNS + Nginx Ingress~~ - HTTPS with Let's Encrypt
+3. ~~PostgreSQL with persistent storage~~ - Shared database server
+4. ~~Twenty CRM deployment~~ - CRM application
+
+### Planned
+
+5. **Conduit** - Matrix homeserver for chat/communication
+   - Lightweight Rust implementation
+   - Mobile app access via Element
+   - Always-on for message delivery
+
+6. **soft-serve** - Git server for code backup
+   - SSH-based, minimal overhead
+   - Backup in case GitHub is down
+   - SQLite storage on persistent disk
+
+7. **Filebrowser** - Simple file management
+   - Web-based file browser
+   - Upload/download files
+   - For Hermes agent file access
+
+8. **Hermes Agent** - AI assistant with cluster access
+   - Full access to all services
+   - Query databases, manage files
+   - Chat interface via Matrix
