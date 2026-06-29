@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
 PERSISTENT_DIR="$ROOT_DIR/terraform/persistent"
 COMPUTE_DIR="$ROOT_DIR/terraform/compute"
 TALOS_VERSION="v1.13.2"
@@ -16,7 +16,7 @@ echo ""
 # Check if persistent infrastructure exists, create if not
 echo "Checking persistent infrastructure..."
 cd "$PERSISTENT_DIR"
-terraform init -upgrade
+terraform init -upgrade -reconfigure
 
 if ! terraform state list 2>/dev/null | grep -q "google_compute_disk.data"; then
     echo "Persistent resources not found, creating..."
@@ -42,7 +42,7 @@ fi
 echo ""
 echo "Creating compute resources..."
 cd "$COMPUTE_DIR"
-terraform init -upgrade
+terraform init -upgrade -reconfigure
 terraform apply -auto-approve \
     -var="project_id=$PROJECT_ID" \
     -var="region=$REGION" \

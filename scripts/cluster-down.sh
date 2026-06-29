@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
 PERSISTENT_DIR="$ROOT_DIR/terraform/persistent"
 COMPUTE_DIR="$ROOT_DIR/terraform/compute"
 

@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
 
 echo "Deploying PostgreSQL..."
 kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"

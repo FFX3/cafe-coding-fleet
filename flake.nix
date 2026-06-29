@@ -37,8 +37,10 @@
             runtimeInputs = runtimeDeps;
             text = ''
               export INFRA_SHELL=1
-              cd "${self}"
-              exec ./${scriptPath} "$@"
+              export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+              export INFRA_ROOT="$PWD"
+              mkdir -p "$TF_PLUGIN_CACHE_DIR"
+              exec "${self}/${scriptPath}" "$@"
             '';
           }}/bin/${name}";
           meta.description = description;
@@ -50,6 +52,8 @@
 
           shellHook = ''
             export INFRA_SHELL=1
+            export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+            mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
             echo ""
             echo "══════════════════════════════════════════════════════════════════"

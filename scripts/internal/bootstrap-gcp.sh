@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+ROOT_DIR="${ROOT_DIR:-$(dirname "$(dirname "$SCRIPT_DIR")")}"
 TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
 TALOS_DIR="$ROOT_DIR/talos"
 CLUSTER_NAME="my-cluster"

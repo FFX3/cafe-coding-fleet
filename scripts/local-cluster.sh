@@ -4,7 +4,7 @@ source "$(dirname "$0")/internal/require-env.sh"
 
 CLUSTER_NAME="talos-local"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
 
 usage() {
     echo "Usage: $0 {up|down|status}"

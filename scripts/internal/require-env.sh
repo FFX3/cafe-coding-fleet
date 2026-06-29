@@ -12,3 +12,10 @@ if [[ -z "${INFRA_SHELL:-}" ]]; then
     echo "  nix develop"
     exit 1
 fi
+
+# Set ROOT_DIR from INFRA_ROOT (set by nix run) or derive from script location
+# This ensures scripts work when run from nix store or directly
+if [[ -n "${INFRA_ROOT:-}" ]]; then
+    ROOT_DIR="$INFRA_ROOT"
+    export ROOT_DIR
+fi
