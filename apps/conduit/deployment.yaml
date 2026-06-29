@@ -56,6 +56,8 @@ spec:
               value: "20000000"
             - name: CONDUIT_CONFIG
               value: ""
+            - name: CONDUIT_EMERGENCY_PASSWORD
+              value: ""
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
