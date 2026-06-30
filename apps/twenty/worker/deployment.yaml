@@ -53,10 +53,10 @@ spec:
               mountPath: /app/packages/twenty-server/.local-storage
           resources:
             requests:
-              memory: "128Mi"
+              memory: "256Mi"
               cpu: "50m"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "300m"
       volumes:
         - name: twenty-storage

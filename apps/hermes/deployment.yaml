@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hermes
+  template:
+    metadata:
+      labels:
+        app: hermes
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: hermes
+          image: nousresearch/hermes-agent:latest
+          command: ["sleep", "infinity"]
+          stdin: true
+          tty: true
+          envFrom:
+            - secretRef:
+                name: hermes-credentials
+          env:
+            - name: HERMES_HOME
+              value: "/data"
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /data
+      volumes:
+        - name: hermes-data
+          persistentVolumeClaim:
+            claimName: hermes-pvc

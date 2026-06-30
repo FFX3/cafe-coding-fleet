@@ -175,6 +175,9 @@ echo ""
 "$ROOT_DIR/scripts/deploy-conduit.sh"
 
 echo ""
+"$ROOT_DIR/scripts/deploy-hermes.sh"
+
+echo ""
 "$ROOT_DIR/scripts/deploy-test-apps.sh"
 
 echo "Waiting for ingress routes to propagate..."
