@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gotrue
+  namespace: gotrue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gotrue
+  template:
+    metadata:
+      labels:
+        app: gotrue
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: supabase/gotrue:v2.158.1
+          command: ["gotrue", "migrate"]
+          envFrom:
+            - secretRef:
+                name: gotrue-credentials
+          env:
+            - name: GOTRUE_DB_DRIVER
+              value: "postgres"
+            - name: API_EXTERNAL_URL
+              value: "https://auth.justinmcintyre.com"
+            - name: GOTRUE_SITE_URL
+              value: "https://justinmcintyre.com"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: gotrue
+          image: supabase/gotrue:v2.158.1
+          ports:
+            - containerPort: 9999
+          envFrom:
+            - secretRef:
+                name: gotrue-credentials
+          env:
+            # Core
+            - name: GOTRUE_DB_DRIVER
+              value: "postgres"
+            - name: GOTRUE_API_HOST
+              value: "0.0.0.0"
+            - name: GOTRUE_API_PORT
+              value: "9999"
+
+            # URLs
+            - name: API_EXTERNAL_URL
+              value: "https://auth.justinmcintyre.com"
+            - name: GOTRUE_SITE_URL
+              value: "https://justinmcintyre.com"
+            - name: GOTRUE_URI_ALLOW_LIST
+              value: "*"
+
+            # JWT config
+            - name: GOTRUE_JWT_EXP
+              value: "3600"
+            - name: GOTRUE_JWT_AUD
+              value: "authenticated"
+            - name: GOTRUE_JWT_ADMIN_ROLES
+              value: "service_role"
+
+            # Auth methods - disable public signup, only deploy script creates users via admin API
+            - name: GOTRUE_DISABLE_SIGNUP
+              value: "true"
+            - name: GOTRUE_EXTERNAL_EMAIL_ENABLED
+              value: "true"
+            - name: GOTRUE_EXTERNAL_PHONE_ENABLED
+              value: "false"
+            - name: GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED
+              value: "false"
+
+            # Disable email confirmation for now (no SMTP)
+            - name: GOTRUE_MAILER_AUTOCONFIRM
+              value: "true"
+
+            # Security
+            - name: GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED
+              value: "true"
+            - name: GOTRUE_MFA_TOTP_ENROLL_ENABLED
+              value: "true"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9999
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9999
+            initialDelaySeconds: 5
+            periodSeconds: 10

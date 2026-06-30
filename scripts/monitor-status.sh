@@ -78,7 +78,7 @@ monitor_status() {
         # Stage 1: Cluster Health
         local stage_time
         if $cluster_health_pass; then
-            stage_time=$(get_stage_time certmanager ingress testapp testapp2 twentyserver twentyworker twentyredis conduit)
+            stage_time=$(get_stage_time certmanager ingress testapp testapp2 twentyserver twentyworker twentyredis conduit gotrue hermes)
             printf "[%s] Cluster Health%*s+%ds\n" "$PASS" $((35 - 14)) "" "$stage_time"
         else
             echo "[$PENDING] Cluster Health"
@@ -91,12 +91,14 @@ monitor_status() {
         if $twentyworker_ok; then printf "    %s twenty-worker running%*s%s\n" "$PASS" $((35 - 21)) "" "$(format_elapsed twentyworker)"; else echo "    $PENDING twenty-worker running"; fi
         if $twentyredis_ok; then printf "    %s twenty-redis running%*s%s\n" "$PASS" $((35 - 20)) "" "$(format_elapsed twentyredis)"; else echo "    $PENDING twenty-redis running"; fi
         if $conduit_ok; then printf "    %s conduit running%*s%s\n" "$PASS" $((35 - 15)) "" "$(format_elapsed conduit)"; else echo "    $PENDING conduit running"; fi
+        if $gotrue_ok; then printf "    %s gotrue running%*s%s\n" "$PASS" $((35 - 14)) "" "$(format_elapsed gotrue)"; else echo "    $PENDING gotrue running"; fi
+        if $hermes_ok; then printf "    %s hermes running%*s%s\n" "$PASS" $((35 - 14)) "" "$(format_elapsed hermes)"; else echo "    $PENDING hermes running"; fi
         echo ""
 
         # Stage 2: Connectivity
         if $cluster_health_pass; then
             if $connectivity_pass; then
-                stage_time=$(get_stage_time ip_reachable dns1 dns2 dns_crm dns_matrix)
+                stage_time=$(get_stage_time ip_reachable dns1 dns2 dns_crm dns_matrix dns_auth dns_hermes)
                 printf "[%s] Connectivity%*s+%ds\n" "$PASS" $((35 - 12)) "" "$stage_time"
             else
                 echo "[$PENDING] Connectivity"
@@ -106,6 +108,8 @@ monitor_status() {
             if $dns2_ok; then printf "    %s DNS: test2.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 29)) "" "$(format_elapsed dns2)"; else echo "    $PENDING DNS: test2.justinmcintyre.com"; fi
             if $dns_crm_ok; then printf "    %s DNS: crm.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 27)) "" "$(format_elapsed dns_crm)"; else echo "    $PENDING DNS: crm.justinmcintyre.com"; fi
             if $dns_matrix_ok; then printf "    %s DNS: matrix.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 30)) "" "$(format_elapsed dns_matrix)"; else echo "    $PENDING DNS: matrix.justinmcintyre.com"; fi
+            if $dns_auth_ok; then printf "    %s DNS: auth.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 28)) "" "$(format_elapsed dns_auth)"; else echo "    $PENDING DNS: auth.justinmcintyre.com"; fi
+            if $dns_hermes_ok; then printf "    %s DNS: hermes.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 30)) "" "$(format_elapsed dns_hermes)"; else echo "    $PENDING DNS: hermes.justinmcintyre.com"; fi
         else
             echo "[ ] Connectivity"
             echo "    (waiting for cluster health)"
@@ -115,7 +119,7 @@ monitor_status() {
         # Stage 3: Certificates
         if $cluster_health_pass && $connectivity_pass; then
             if $certs_pass; then
-                stage_time=$(get_stage_time cert1 cert2 cert_crm cert_matrix)
+                stage_time=$(get_stage_time cert1 cert2 cert_crm cert_matrix cert_auth cert_hermes)
                 printf "[%s] Certificates%*s+%ds\n" "$PASS" $((35 - 12)) "" "$stage_time"
             else
                 echo "[$PENDING] Certificates"
@@ -124,6 +128,8 @@ monitor_status() {
             if $cert2_ok; then printf "    %s test-app-2-tls: Ready%*s%s\n" "$PASS" $((35 - 21)) "" "$(format_elapsed cert2)"; else echo "    $PENDING test-app-2-tls: Pending"; fi
             if $cert_crm_ok; then printf "    %s twenty-tls: Ready%*s%s\n" "$PASS" $((35 - 17)) "" "$(format_elapsed cert_crm)"; else echo "    $PENDING twenty-tls: Pending"; fi
             if $cert_matrix_ok; then printf "    %s conduit-tls: Ready%*s%s\n" "$PASS" $((35 - 18)) "" "$(format_elapsed cert_matrix)"; else echo "    $PENDING conduit-tls: Pending"; fi
+            if $cert_auth_ok; then printf "    %s gotrue-tls: Ready%*s%s\n" "$PASS" $((35 - 17)) "" "$(format_elapsed cert_auth)"; else echo "    $PENDING gotrue-tls: Pending"; fi
+            if $cert_hermes_ok; then printf "    %s hermes-tls: Ready%*s%s\n" "$PASS" $((35 - 17)) "" "$(format_elapsed cert_hermes)"; else echo "    $PENDING hermes-tls: Pending"; fi
         else
             echo "[ ] Certificates"
             echo "    (waiting for connectivity)"
@@ -133,7 +139,7 @@ monitor_status() {
         # Stage 4: HTTPS Responses
         if $certs_pass && $cluster_health_pass && $connectivity_pass; then
             if $https_pass; then
-                stage_time=$(get_stage_time https1 https2 https_crm https_matrix)
+                stage_time=$(get_stage_time https1 https2 https_crm https_matrix https_auth https_hermes)
                 printf "[%s] HTTPS Responses%*s+%ds\n" "$PASS" $((35 - 15)) "" "$stage_time"
             else
                 echo "[$PENDING] HTTPS Responses"
@@ -158,6 +164,16 @@ monitor_status() {
             else
                 echo "    $PENDING matrix.justinmcintyre.com ($https_matrix_code)"
             fi
+            if $https_auth_ok; then
+                printf "    %s auth.justinmcintyre.com (%s)%*s%s\n" "$PASS" "$https_auth_code" $((35 - 28 - ${#https_auth_code})) "" "$(format_elapsed https_auth)"
+            else
+                echo "    $PENDING auth.justinmcintyre.com ($https_auth_code)"
+            fi
+            if $https_hermes_ok; then
+                printf "    %s hermes.justinmcintyre.com (%s)%*s%s\n" "$PASS" "$https_hermes_code" $((35 - 30 - ${#https_hermes_code})) "" "$(format_elapsed https_hermes)"
+            else
+                echo "    $PENDING hermes.justinmcintyre.com ($https_hermes_code)"
+            fi
         else
             echo "[ ] HTTPS Responses"
             echo "    (waiting for certificates)"
@@ -166,8 +182,8 @@ monitor_status() {
 
         # Stage 5: Content Check
         if $https_pass && $certs_pass && $cluster_health_pass && $connectivity_pass; then
-            if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok; then
-                stage_time=$(get_stage_time content1 content2 content_crm content_matrix)
+            if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok && $content_auth_ok && $content_hermes_ok; then
+                stage_time=$(get_stage_time content1 content2 content_crm content_matrix content_auth content_hermes)
                 printf "[%s] Content Check%*s+%ds\n" "$PASS" $((35 - 13)) "" "$stage_time"
             else
                 echo "[$PENDING] Content Check"
@@ -176,9 +192,11 @@ monitor_status() {
             if $content2_ok; then printf "    %s test2.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 24)) "" "$(format_elapsed content2)"; else echo "    $PENDING test2.justinmcintyre.com"; fi
             if $content_crm_ok; then printf "    %s crm.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 22)) "" "$(format_elapsed content_crm)"; else echo "    $PENDING crm.justinmcintyre.com"; fi
             if $content_matrix_ok; then printf "    %s matrix.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 25)) "" "$(format_elapsed content_matrix)"; else echo "    $PENDING matrix.justinmcintyre.com"; fi
+            if $content_auth_ok; then printf "    %s auth.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 23)) "" "$(format_elapsed content_auth)"; else echo "    $PENDING auth.justinmcintyre.com"; fi
+            if $content_hermes_ok; then printf "    %s hermes.justinmcintyre.com%*s%s\n" "$PASS" $((35 - 25)) "" "$(format_elapsed content_hermes)"; else echo "    $PENDING hermes.justinmcintyre.com"; fi
 
             # Note about cert export if they weren't restored from storage
-            if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok && [[ "$CERTS_RESTORED" != "true" ]]; then
+            if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok && $content_auth_ok && $content_hermes_ok && [[ "$CERTS_RESTORED" != "true" ]]; then
                 echo ""
                 echo "---"
                 echo "New certificates issued. They will be exported automatically on cluster-down."
@@ -199,6 +217,8 @@ monitor_status() {
         local twentyworker_ok=false
         local twentyredis_ok=false
         local conduit_ok=false
+        local gotrue_ok=false
+        local hermes_ok=false
         local cluster_health_pass=true
 
         if kubectl get pods -n cert-manager -l app=cert-manager --no-headers 2>/dev/null | grep -q Running; then
@@ -257,12 +277,28 @@ monitor_status() {
             cluster_health_pass=false
         fi
 
+        if kubectl get pods -n gotrue -l app=gotrue --no-headers 2>/dev/null | grep -q Running; then
+            gotrue_ok=true
+            record_pass "gotrue"
+        else
+            cluster_health_pass=false
+        fi
+
+        if kubectl get pods -n hermes -l app=hermes --no-headers 2>/dev/null | grep -q Running; then
+            hermes_ok=true
+            record_pass "hermes"
+        else
+            cluster_health_pass=false
+        fi
+
         # Connectivity checks
         local ip_reachable=false
         local dns1_ok=false
         local dns2_ok=false
         local dns_crm_ok=false
         local dns_matrix_ok=false
+        local dns_auth_ok=false
+        local dns_hermes_ok=false
         local connectivity_pass=true
 
         if $cluster_health_pass; then
@@ -302,6 +338,20 @@ monitor_status() {
             else
                 connectivity_pass=false
             fi
+
+            if getent hosts auth.justinmcintyre.com >/dev/null 2>&1; then
+                dns_auth_ok=true
+                record_pass "dns_auth"
+            else
+                connectivity_pass=false
+            fi
+
+            if getent hosts hermes.justinmcintyre.com >/dev/null 2>&1; then
+                dns_hermes_ok=true
+                record_pass "dns_hermes"
+            else
+                connectivity_pass=false
+            fi
         else
             connectivity_pass=false
         fi
@@ -311,14 +361,18 @@ monitor_status() {
         local cert2_ok=false
         local cert_crm_ok=false
         local cert_matrix_ok=false
+        local cert_auth_ok=false
+        local cert_hermes_ok=false
         local certs_pass=true
 
         if $cluster_health_pass && $connectivity_pass; then
-            local cert1_status cert2_status cert_crm_status cert_matrix_status
+            local cert1_status cert2_status cert_crm_status cert_matrix_status cert_auth_status cert_hermes_status
             cert1_status=$(kubectl get certificate test-app-tls -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
             cert2_status=$(kubectl get certificate test-app-2-tls -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
             cert_crm_status=$(kubectl get certificate twenty-tls -n twenty -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
             cert_matrix_status=$(kubectl get certificate conduit-tls -n conduit -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
+            cert_auth_status=$(kubectl get certificate gotrue-tls -n gotrue -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
+            cert_hermes_status=$(kubectl get certificate hermes-tls -n hermes -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
 
             if [[ "$cert1_status" == "True" ]]; then
                 cert1_ok=true
@@ -336,7 +390,15 @@ monitor_status() {
                 cert_matrix_ok=true
                 record_pass "cert_matrix"
             fi
-            if ! $cert1_ok || ! $cert2_ok || ! $cert_crm_ok || ! $cert_matrix_ok; then
+            if [[ "$cert_auth_status" == "True" ]]; then
+                cert_auth_ok=true
+                record_pass "cert_auth"
+            fi
+            if [[ "$cert_hermes_status" == "True" ]]; then
+                cert_hermes_ok=true
+                record_pass "cert_hermes"
+            fi
+            if ! $cert1_ok || ! $cert2_ok || ! $cert_crm_ok || ! $cert_matrix_ok || ! $cert_auth_ok || ! $cert_hermes_ok; then
                 certs_pass=false
             fi
         else
@@ -348,10 +410,14 @@ monitor_status() {
         local https2_ok=false
         local https_crm_ok=false
         local https_matrix_ok=false
+        local https_auth_ok=false
+        local https_hermes_ok=false
         local https1_code="..."
         local https2_code="..."
         local https_crm_code="..."
         local https_matrix_code="..."
+        local https_auth_code="..."
+        local https_hermes_code="..."
         local https_pass=true
 
         if $certs_pass && $cluster_health_pass && $connectivity_pass; then
@@ -359,6 +425,8 @@ monitor_status() {
             https2_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://test2.justinmcintyre.com" 2>/dev/null || echo "000")
             https_crm_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://crm.justinmcintyre.com/healthz" 2>/dev/null || echo "000")
             https_matrix_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://matrix.justinmcintyre.com/_matrix/client/versions" 2>/dev/null || echo "000")
+            https_auth_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://auth.justinmcintyre.com/health" 2>/dev/null || echo "000")
+            https_hermes_code=$(curl -sk --connect-timeout 3 -o /dev/null -w "%{http_code}" "https://hermes.justinmcintyre.com" 2>/dev/null || echo "000")
 
             # 000 means connection failed, anything else means TLS worked
             if [[ "$https1_code" != "000" ]]; then
@@ -388,6 +456,20 @@ monitor_status() {
             else
                 https_pass=false
             fi
+
+            if [[ "$https_auth_code" != "000" ]]; then
+                https_auth_ok=true
+                record_pass "https_auth"
+            else
+                https_pass=false
+            fi
+
+            if [[ "$https_hermes_code" != "000" ]]; then
+                https_hermes_ok=true
+                record_pass "https_hermes"
+            else
+                https_pass=false
+            fi
         else
             https_pass=false
         fi
@@ -397,6 +479,8 @@ monitor_status() {
         local content2_ok=false
         local content_crm_ok=false
         local content_matrix_ok=false
+        local content_auth_ok=false
+        local content_hermes_ok=false
 
         if $https_pass && $certs_pass && $cluster_health_pass && $connectivity_pass; then
             if curl -sk https://test.justinmcintyre.com 2>/dev/null | grep -q "It works!"; then
@@ -417,15 +501,26 @@ monitor_status() {
                 content_matrix_ok=true
                 record_pass "content_matrix"
             fi
+            # GoTrue returns 200 on health endpoint when healthy
+            if [[ "$https_auth_code" == "200" ]]; then
+                content_auth_ok=true
+                record_pass "content_auth"
+            fi
+            # Hermes dashboard returns 200 when healthy
+            if [[ "$https_hermes_code" == "200" ]]; then
+                content_hermes_ok=true
+                record_pass "content_hermes"
+            fi
         fi
 
         # Build state string
         local current_state="${certmanager_ok}${ingress_ok}${testapp_ok}${testapp2_ok}"
-        current_state+="${twentyserver_ok}${twentyworker_ok}${twentyredis_ok}${conduit_ok}"
-        current_state+="${ip_reachable}${dns1_ok}${dns2_ok}${dns_crm_ok}${dns_matrix_ok}"
-        current_state+="${cert1_ok}${cert2_ok}${cert_crm_ok}${cert_matrix_ok}"
-        current_state+="${https1_ok}${https2_ok}${https_crm_ok}${https_matrix_ok}${https1_code}${https2_code}${https_crm_code}${https_matrix_code}"
-        current_state+="${content1_ok}${content2_ok}${content_crm_ok}${content_matrix_ok}"
+        current_state+="${twentyserver_ok}${twentyworker_ok}${twentyredis_ok}${conduit_ok}${gotrue_ok}${hermes_ok}"
+        current_state+="${ip_reachable}${dns1_ok}${dns2_ok}${dns_crm_ok}${dns_matrix_ok}${dns_auth_ok}${dns_hermes_ok}"
+        current_state+="${cert1_ok}${cert2_ok}${cert_crm_ok}${cert_matrix_ok}${cert_auth_ok}${cert_hermes_ok}"
+        current_state+="${https1_ok}${https2_ok}${https_crm_ok}${https_matrix_ok}${https_auth_ok}${https_hermes_ok}"
+        current_state+="${https1_code}${https2_code}${https_crm_code}${https_matrix_code}${https_auth_code}${https_hermes_code}"
+        current_state+="${content1_ok}${content2_ok}${content_crm_ok}${content_matrix_ok}${content_auth_ok}${content_hermes_ok}"
 
         # Only redraw if state changed
         if [[ "$current_state" != "$prev_state" ]]; then
@@ -435,7 +530,7 @@ monitor_status() {
         fi
 
         # Exit when all checks pass
-        if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok; then
+        if $content1_ok && $content2_ok && $content_crm_ok && $content_matrix_ok && $content_auth_ok && $content_hermes_ok; then
             local total_time=$(($(date +%s) - START_TIME))
             echo ""
             echo "Total: ${total_time}s"
@@ -453,19 +548,34 @@ monitor_status() {
                 "twentyserver:twenty-server"
                 "twentyworker:twenty-worker"
                 "twentyredis:twenty-redis"
+                "conduit:conduit"
+                "gotrue:gotrue"
+                "hermes:hermes"
                 "ip_reachable:Cluster IP"
                 "dns1:DNS test.justinmcintyre.com"
                 "dns2:DNS test2.justinmcintyre.com"
                 "dns_crm:DNS crm.justinmcintyre.com"
+                "dns_matrix:DNS matrix.justinmcintyre.com"
+                "dns_auth:DNS auth.justinmcintyre.com"
+                "dns_hermes:DNS hermes.justinmcintyre.com"
                 "cert1:test-app-tls"
                 "cert2:test-app-2-tls"
                 "cert_crm:twenty-tls"
+                "cert_matrix:conduit-tls"
+                "cert_auth:gotrue-tls"
+                "cert_hermes:hermes-tls"
                 "https1:test.justinmcintyre.com HTTPS"
                 "https2:test2.justinmcintyre.com HTTPS"
                 "https_crm:crm.justinmcintyre.com HTTPS"
+                "https_matrix:matrix.justinmcintyre.com HTTPS"
+                "https_auth:auth.justinmcintyre.com HTTPS"
+                "https_hermes:hermes.justinmcintyre.com HTTPS"
                 "content1:test.justinmcintyre.com content"
                 "content2:test2.justinmcintyre.com content"
                 "content_crm:crm.justinmcintyre.com content"
+                "content_matrix:matrix.justinmcintyre.com content"
+                "content_auth:auth.justinmcintyre.com content"
+                "content_hermes:hermes.justinmcintyre.com content"
             )
 
             for entry in "${check_names[@]}"; do

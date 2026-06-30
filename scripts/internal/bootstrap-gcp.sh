@@ -138,6 +138,8 @@ echo "Creating application namespaces..."
 kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/conduit/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/gotrue/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/hermes/namespace.yaml"
 
 # Restore certificates if available (before deploying apps that create ingresses)
 restore_certificates() {
@@ -167,6 +169,9 @@ restore_certificates
 # Deploy applications
 echo ""
 "$ROOT_DIR/scripts/deploy-postgres.sh"
+
+echo ""
+"$ROOT_DIR/scripts/deploy-gotrue.sh"
 
 echo ""
 "$ROOT_DIR/scripts/deploy-twenty.sh"

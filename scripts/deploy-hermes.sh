@@ -27,7 +27,12 @@ sops --decrypt "$ROOT_DIR/apps/hermes/secret.enc.yaml" | kubectl apply -f -
 kubectl apply -f "$ROOT_DIR/apps/hermes/pv.yaml"
 kubectl apply -f "$ROOT_DIR/apps/hermes/pvc.yaml"
 kubectl apply -f "$ROOT_DIR/apps/hermes/deployment.yaml"
+kubectl apply -f "$ROOT_DIR/apps/hermes/service.yaml"
+kubectl apply -f "$ROOT_DIR/apps/hermes/ingress.yaml"
 kubectl rollout status deployment/hermes -n hermes --timeout=120s
 
-echo "Hermes deployed. Access TUI:"
-echo "  kubectl exec -it -n hermes deployment/hermes -- hermes --tui"
+echo ""
+echo "Hermes deployed at https://hermes.justinmcintyre.com"
+echo ""
+echo "TUI access:"
+echo "  nix run .#hermes"

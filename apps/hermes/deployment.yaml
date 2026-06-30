@@ -30,9 +30,9 @@ spec:
       containers:
         - name: hermes
           image: nousresearch/hermes-agent:latest
-          command: ["sleep", "infinity"]
-          stdin: true
-          tty: true
+          command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--insecure"]
+          ports:
+            - containerPort: 9119
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
@@ -56,6 +56,20 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
+          startupProbe:
+            tcpSocket:
+              port: 9119
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9119
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 9119
+            periodSeconds: 10
       volumes:
         - name: hermes-data
           persistentVolumeClaim:
