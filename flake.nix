@@ -98,6 +98,7 @@
           # Utilities
           dashboard = mkApp "dashboard" "Open Talos dashboard" "scripts/dashboard.sh";
           db-connect = mkApp "db-connect" "Connect to PostgreSQL" "scripts/db-connect.sh";
+          hermes = mkApp "hermes" "Connect to Hermes AI agent" "scripts/hermes.sh";
           disk-usage = mkApp "disk-usage" "Show disk usage" "scripts/disk-usage.sh";
           list-resources = mkApp "list-resources" "List GCP resources" "scripts/list-resources.sh";
           monitor = mkApp "monitor" "Monitor cluster status" "scripts/monitor-status.sh";
