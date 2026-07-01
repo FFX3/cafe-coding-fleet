@@ -94,6 +94,7 @@
           deploy-conduit = mkApp "deploy-conduit" "Deploy Conduit Matrix server" "scripts/deploy-conduit.sh";
           deploy-gotrue = mkApp "deploy-gotrue" "Deploy GoTrue auth server" "scripts/deploy-gotrue.sh";
           deploy-hermes = mkApp "deploy-hermes" "Deploy Hermes agent" "scripts/deploy-hermes.sh";
+          deploy-studio = mkApp "deploy-studio" "Deploy Studio app" "scripts/deploy-studio.sh";
           deploy-test-apps = mkApp "deploy-test-apps" "Deploy test applications" "scripts/deploy-test-apps.sh";
 
           # Utilities

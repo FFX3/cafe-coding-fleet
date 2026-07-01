@@ -19,7 +19,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: migrate
-          image: supabase/gotrue:v2.158.1
+          image: supabase/gotrue:v2.192.0
           command: ["gotrue", "migrate"]
           envFrom:
             - secretRef:
@@ -30,7 +30,7 @@ spec:
             - name: API_EXTERNAL_URL
               value: "https://auth.justinmcintyre.com"
             - name: GOTRUE_SITE_URL
-              value: "https://justinmcintyre.com"
+              value: "https://studio.justinmcintyre.com"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
@@ -40,7 +40,7 @@ spec:
               drop: ["ALL"]
       containers:
         - name: gotrue
-          image: supabase/gotrue:v2.158.1
+          image: supabase/gotrue:v2.192.0
           ports:
             - containerPort: 9999
           envFrom:
@@ -59,9 +59,9 @@ spec:
             - name: API_EXTERNAL_URL
               value: "https://auth.justinmcintyre.com"
             - name: GOTRUE_SITE_URL
-              value: "https://justinmcintyre.com"
+              value: "https://studio.justinmcintyre.com"
             - name: GOTRUE_URI_ALLOW_LIST
-              value: "*"
+              value: "https://hermes.justinmcintyre.com/**,https://justinmcintyre.com/**,https://crm.justinmcintyre.com/**"
 
             # JWT config
             - name: GOTRUE_JWT_EXP
@@ -70,6 +70,14 @@ spec:
               value: "authenticated"
             - name: GOTRUE_JWT_ADMIN_ROLES
               value: "service_role"
+            - name: GOTRUE_JWT_ISSUER
+              value: "https://auth.justinmcintyre.com"
+
+            # OAuth 2.1 / OIDC provider mode
+            - name: GOTRUE_OAUTH_SERVER_ENABLED
+              value: "true"
+            - name: GOTRUE_OAUTH_SERVER_AUTHORIZATION_PATH
+              value: "/oauth/consent"
 
             # Auth methods - disable public signup, only deploy script creates users via admin API
             - name: GOTRUE_DISABLE_SIGNUP

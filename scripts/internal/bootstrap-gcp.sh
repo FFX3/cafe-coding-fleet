@@ -140,6 +140,7 @@ kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/conduit/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/gotrue/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/hermes/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/studio/namespace.yaml"
 
 # Restore certificates if available (before deploying apps that create ingresses)
 restore_certificates() {
@@ -172,6 +173,9 @@ echo ""
 
 echo ""
 "$ROOT_DIR/scripts/deploy-gotrue.sh"
+
+echo ""
+"$ROOT_DIR/scripts/deploy-studio.sh"
 
 echo ""
 "$ROOT_DIR/scripts/deploy-twenty.sh"
