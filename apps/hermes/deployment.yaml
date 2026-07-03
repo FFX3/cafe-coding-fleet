@@ -28,7 +28,7 @@ spec:
             - name: hermes-data
               mountPath: /data
       containers:
-        - name: hermes
+        - name: dashboard
           image: nousresearch/hermes-agent:latest
           command: ["hermes", "dashboard", "--host", "0.0.0.0", "--port", "9119", "--insecure"]
           ports:
@@ -46,6 +46,20 @@ spec:
           env:
             - name: HERMES_HOME
               value: "/data"
+            - name: MATRIX_REQUIRE_MENTION
+              value: "true"
+            - name: MATRIX_ALLOWED_USERS
+              value: "@justin:matrix.justinmcintyre.com"
+            - name: MATRIX_ALLOWED_ROOMS
+              value: "!ops:matrix.justinmcintyre.com"
+            - name: MATRIX_IGNORE_USER_PATTERNS
+              value: "^@telegram_,^@whatsapp_" #just examples so I don't forget
+            - name: MATRIX_PROCESS_NOTICES
+              value: "false"
+            - name: MATRIX_SESSION_SCOPE
+              value: "room"
+            - name: MATRIX_GROUP_SESSIONS_PER_USER
+              value: "false"
           volumeMounts:
             - name: hermes-data
               mountPath: /data
@@ -70,6 +84,32 @@ spec:
             tcpSocket:
               port: 9119
             periodSeconds: 10
+        - name: gateway
+          image: nousresearch/hermes-agent:latest
+          command: ["hermes", "gateway"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          envFrom:
+            - secretRef:
+                name: hermes-credentials
+          env:
+            - name: HERMES_HOME
+              value: "/data"
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "50m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
       volumes:
         - name: hermes-data
           persistentVolumeClaim:

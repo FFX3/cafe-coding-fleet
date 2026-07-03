@@ -1,45 +1,68 @@
 # GoTrue (Supabase Auth)
 
-OIDC provider for authentication across services.
+OIDC provider for authentication across cluster services.
 
 ## Endpoint
 
 https://auth.justinmcintyre.com
 
-## JWT Secret Generation
+## Asymmetric Key Configuration (JWKS)
 
-GoTrue requires an **RSA private key** (not a symmetric secret) for OIDC ID token signing. The key must be base64-encoded PEM format.
+GoTrue requires a structured JSON Web Key Set (JWKS) list to dynamically populate its public key infrastructure for OpenID Connect validations. Passing raw PEM strings or simple Base64 strings directly into the secret layer will cause runtime validation crashes or result in empty key arrays (`{"keys":[]}`).
 
-### Generate a new key:
+### 1. Generate a New Cryptographic Keypair
+Run these native shell commands to establish an uncompromised RSA key block inside your local workspace context:
 
 ```bash
-# Generate RSA private key (2048-bit)
-openssl genrsa 2048 > tmp/rsa-private.pem
+# Generate a new 2048-bit RSA private key
+openssl genrsa -out tmp/rsa-private.pem 2048
 
-# Base64 encode (single line, no wrapping)
-base64 -w 0 tmp/rsa-private.pem
+# Extract the corresponding public key
+openssl rsa -in tmp/rsa-private.pem -pubout -out tmp/rsa-public.pem
 ```
 
-### Add to secret:
+### 2. Compile the Structured JWK Array Payload
+GoTrue's configuration compiler strictly mandates that public keys require `"key_ops": ["verify"]` and private elements require `"key_ops": ["sign", "verify"]` to actively authorize client handshakes. 
 
-Edit `apps/gotrue/secret.enc.yaml` (use single quotes for the base64 string):
+Execute this Node script to mathematically extract your parameters into a continuous, single-line valid JSON string:
+
+```bash
+node -e "
+const crypto = require('crypto');
+const fs = require('fs');
+const privateKeyPem = fs.readFileSync('tmp/rsa-private.pem', 'utf8');
+const key = crypto.createPrivateKey(privateKeyPem);
+const jwk = key.export({ format: 'jwk' });
+jwk.kid = 'auth-signing-key';
+jwk.use = 'sig';
+jwk.alg = 'RS256';
+jwk.key_ops = ['sign', 'verify'];
+console.log(JSON.stringify([jwk]));
+"
+```
+
+### 3. Add to Secret Configuration
+Open your GitOps configuration block file (`apps/gotrue/secret.enc.yaml`) and append the raw string output directly. **Wrap the complete string in single quotes** to avoid character-escaping issues through the YAML parsing runtime layer:
 
 ```yaml
-GOTRUE_JWT_SECRET: '<base64-encoded-rsa-private-key>'
+GOTRUE_JWT_KEYS: '[{"key_ops":["sign","verify"],"kty":"RSA","kid":"auth-signing-key","use":"sig","alg":"RS256","n":"...","e":"...","d":"...","p":"...","q":"...","dp":"...","dq":"...","qi":"..."}]'
 ```
 
-## Secrets
+*Note: Keep your legacy `GOTRUE_JWT_SECRET` string variable active to support standard baseline symmetric session verification logic.*
 
-The `secret.enc.yaml` contains:
+## Secrets Layer Matrix
 
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (auth schema in main db) |
-| `GOTRUE_JWT_SECRET` | Base64-encoded RSA private key PEM for signing JWTs |
+The `secret.enc.yaml` contains these environment mapping parameters:
 
-## Users
+| Variable | Type | Description |
+|----------|------|-------------|
+| `DATABASE_URL` | String | PostgreSQL connection uri string mapped directly to the `auth` cluster namespace schema. |
+| `GOTRUE_JWT_KEYS` | JSON String | Strict RFC-compliant JWK dictionary configuration containing structural key operation properties for OIDC token minting. |
+| `GOTRUE_JWT_SECRET` | Base64 String | Fallback symmetric validation secret context maintaining internal dashboard routes and backend database lookups. |
 
-Users are defined in `users.enc.yaml` and created via the deploy script (direct DB insert with bcrypt hashing). Public signup is disabled.
+## Users Management
+
+Users are defined in `users.enc.yaml` and created via the deploy script (direct DB insert with bcrypt hashing). Public open signup interfaces are completely disabled.
 
 ```yaml
 users:
@@ -47,20 +70,34 @@ users:
     password: "securepassword"
 ```
 
-## Deploy
+## Deploy Commands
+
+Deploy the updated manifest definitions and cycle the active node pods using your Nix pipeline wrapper setup:
 
 ```bash
 nix run .#deploy-gotrue
 ```
 
-## OIDC Discovery
+## Verification
+
+### OIDC Discovery Validation
+Ensure all endpoints map successfully by verifying the configuration endpoints:
 
 ```bash
 curl https://auth.justinmcintyre.com/.well-known/openid-configuration
 ```
 
-## Health Check
+### Cryptographic Public Keys Array
+Ensure the array returns your active key details instead of empty brackets (`{"keys":[]}`):
+
+```bash
+curl https://justinmcintyre.com
+```
+
+### Pod Health Evaluation
+Verify container readiness:
 
 ```bash
 curl https://auth.justinmcintyre.com/health
 ```
+

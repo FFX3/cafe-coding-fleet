@@ -28,9 +28,11 @@ spec:
             - name: GOTRUE_DB_DRIVER
               value: "postgres"
             - name: API_EXTERNAL_URL
-              value: "https://auth.justinmcintyre.com"
+              value: "https://justinmcintyre.com"
             - name: GOTRUE_SITE_URL
-              value: "https://studio.justinmcintyre.com"
+              value: "https://justinmcintyre.com"
+            - name: GOTRUE_JWT_VALID_METHODS
+              value: "RS256"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
@@ -61,7 +63,7 @@ spec:
             - name: GOTRUE_SITE_URL
               value: "https://studio.justinmcintyre.com"
             - name: GOTRUE_URI_ALLOW_LIST
-              value: "https://hermes.justinmcintyre.com/**,https://justinmcintyre.com/**,https://crm.justinmcintyre.com/**"
+              value: "https://hermes.justinmcintyre.com/**,https://studio.justinmcintyre.com/**,https://crm.justinmcintyre.com/**"
 
             # JWT config
             - name: GOTRUE_JWT_EXP
