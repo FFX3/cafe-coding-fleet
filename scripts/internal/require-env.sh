@@ -19,3 +19,9 @@ if [[ -n "${INFRA_ROOT:-}" ]]; then
     ROOT_DIR="$INFRA_ROOT"
     export ROOT_DIR
 fi
+
+# Get external IP from terraform if available
+if [[ -n "${ROOT_DIR:-}" ]] && [[ -d "$ROOT_DIR/terraform/compute" ]]; then
+    NODE_IP=$(cd "$ROOT_DIR/terraform/compute" && terraform output -raw controlplane_external_ip 2>/dev/null) || true
+    export NODE_IP
+fi

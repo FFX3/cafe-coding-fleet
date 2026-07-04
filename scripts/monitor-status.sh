@@ -2,10 +2,6 @@
 set -euo pipefail
 source "$(dirname "$0")/internal/require-env.sh"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
-TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
-
 # Benchmarking: track when monitoring started
 START_TIME=$(date +%s)
 START_TIME_DISPLAY=$(date +%H:%M:%S)
@@ -44,15 +40,12 @@ get_stage_time() {
     echo "$max"
 }
 
-# Get IP from terraform
-cd "$TERRAFORM_DIR"
-IP=$(terraform output -raw controlplane_external_ip 2>/dev/null || echo "")
-
-if [[ -z "$IP" ]]; then
+if [[ -z "${NODE_IP:-}" ]]; then
     echo "Error: Could not get IP from terraform output"
     echo "Make sure you've run: cd terraform && terraform apply"
     exit 1
 fi
+IP="$NODE_IP"
 
 # Check if certs were restored (if not passed from bootstrap, check if encrypted certs exist)
 CERTS_RESTORED="${CERTS_RESTORED:-false}"

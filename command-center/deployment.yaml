@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: command-center
+  namespace: command-center
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: command-center
+  template:
+    metadata:
+      labels:
+        app: command-center
+    spec:
+      priorityClassName: debug-critical
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: setup
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              chown -R 1000:1000 /home/justin
+              mkdir -p /config/ssh_host_keys
+              cp /host-keys-secret/ssh_host_* /config/ssh_host_keys/
+              chmod 600 /config/ssh_host_keys/ssh_host_*_key
+              chmod 644 /config/ssh_host_keys/ssh_host_*_key.pub
+              chown -R 1000:1000 /config
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: home
+              mountPath: /home/justin
+            - name: host-keys-secret
+              mountPath: /host-keys-secret
+              readOnly: true
+            - name: config
+              mountPath: /config
+      containers:
+        - name: shell
+          image: lscr.io/linuxserver/openssh-server:latest
+          ports:
+            - containerPort: 2222
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Halifax"
+            - name: SUDO_ACCESS
+              value: "true"
+            - name: USER_NAME
+              value: "justin"
+            - name: PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: command-center-keys
+                  key: authorized_keys
+          volumeMounts:
+            - name: home
+              mountPath: /home/justin
+            - name: config
+              mountPath: /config
+            - name: hermes
+              mountPath: /command-center/hermes
+            - name: conduit
+              mountPath: /command-center/conduit
+            - name: postgres
+              mountPath: /command-center/postgres
+            - name: twenty
+              mountPath: /command-center/twenty
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            # No limits - debug tool can use whatever's available
+      volumes:
+        - name: home
+          persistentVolumeClaim:
+            claimName: command-center-pvc
+        - name: host-keys-secret
+          secret:
+            secretName: command-center-keys
+        - name: config
+          emptyDir: {}
+        - name: hermes
+          hostPath:
+            path: /var/mnt/data/hermes
+            type: DirectoryOrCreate
+        - name: conduit
+          hostPath:
+            path: /var/mnt/data/conduit
+            type: DirectoryOrCreate
+        - name: postgres
+          hostPath:
+            path: /var/mnt/data/postgres
+            type: DirectoryOrCreate
+        - name: twenty
+          hostPath:
+            path: /var/mnt/data/twenty
+            type: DirectoryOrCreate

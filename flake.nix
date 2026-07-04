@@ -104,6 +104,10 @@
           disk-usage = mkApp "disk-usage" "Show disk usage" "scripts/disk-usage.sh";
           list-resources = mkApp "list-resources" "List GCP resources" "scripts/list-resources.sh";
           monitor = mkApp "monitor" "Monitor cluster status" "scripts/monitor-status.sh";
+          terraform-apply = mkApp "terraform-apply" "Apply terraform (compute or persistent)" "scripts/terraform-apply.sh";
+          shell-connect = mkApp "shell-connect" "Connect to command-center shell" "scripts/shell-connect.sh";
+          shell-down = mkApp "shell-down" "Scale down command-center" "scripts/shell-down.sh";
+          deploy-command-center = mkApp "deploy-command-center" "Deploy command-center" "scripts/deploy-command-center.sh";
         };
       }
     );

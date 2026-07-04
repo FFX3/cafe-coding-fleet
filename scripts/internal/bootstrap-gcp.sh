@@ -3,22 +3,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${ROOT_DIR:-$(dirname "$(dirname "$SCRIPT_DIR")")}"
-TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
 TALOS_DIR="$ROOT_DIR/talos"
 CLUSTER_NAME="my-cluster"
 
 # Global flag to track if certs were restored (used by monitoring loop)
 CERTS_RESTORED=false
 
-# Get IP from terraform
-cd "$TERRAFORM_DIR"
-IP=$(terraform output -raw controlplane_external_ip)
-
-if [[ -z "$IP" ]]; then
-    echo "Error: Could not get IP from terraform output"
-    echo "Make sure you've run: cd terraform/compute && terraform apply"
+# Get IP from environment (set by require-env.sh via cluster-up.sh)
+if [[ -z "${NODE_IP:-}" ]]; then
+    echo "Error: NODE_IP not set"
+    echo "Make sure you're running via: nix run .#cluster-up"
     exit 1
 fi
+IP="$NODE_IP"
 
 echo "Talos GCP Bootstrap"
 echo "==================="
@@ -169,25 +166,7 @@ restore_certificates
 
 # Deploy applications
 echo ""
-"$ROOT_DIR/scripts/deploy-postgres.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-gotrue.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-studio.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-twenty.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-conduit.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-hermes.sh"
-
-echo ""
-"$ROOT_DIR/scripts/deploy-test-apps.sh"
+"$ROOT_DIR/scripts/deploy-apps.sh"
 
 echo "Waiting for ingress routes to propagate..."
 sleep 3

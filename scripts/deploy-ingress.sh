@@ -17,6 +17,11 @@ echo "Patching ingress controller for hostNetwork..."
 kubectl patch deployment -n ingress-nginx ingress-nginx-controller \
     --patch-file "$ROOT_DIR/apps/nginx-ingress/hostnetwork-patch.yaml"
 
+echo "Configuring TCP services for SSH access..."
+kubectl apply -f "$ROOT_DIR/apps/nginx-ingress/tcp-services.yaml"
+kubectl patch deployment -n ingress-nginx ingress-nginx-controller \
+    --patch-file "$ROOT_DIR/apps/nginx-ingress/tcp-patch.yaml"
+
 echo "Waiting for ingress controller rollout..."
 kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=120s
 

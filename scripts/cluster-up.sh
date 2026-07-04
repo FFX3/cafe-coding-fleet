@@ -48,7 +48,10 @@ terraform apply -auto-approve \
     -var="region=$REGION" \
     -var="zone=$ZONE"
 
+# Re-source to get NODE_IP now that terraform has applied
 cd "$ROOT_DIR"
+source "$ROOT_DIR/scripts/internal/require-env.sh"
+
 ./scripts/internal/bootstrap-gcp.sh
 
 echo ""
