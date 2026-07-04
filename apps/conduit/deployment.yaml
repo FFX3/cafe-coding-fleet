@@ -54,6 +54,8 @@ spec:
               value: '["matrix.org"]'
             - name: CONDUIT_MAX_REQUEST_SIZE
               value: "20000000"
+            - name: CONDUIT_ENABLE_LIGHTNING_BOLT
+              value: "false"
             - name: CONDUIT_CONFIG
               value: ""
           securityContext:
