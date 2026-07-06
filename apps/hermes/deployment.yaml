@@ -44,7 +44,11 @@ spec:
             - secretRef:
                 name: hermes-credentials
           env:
+            - name: HOME
+              value: "/data/home"
             - name: HERMES_HOME
+              value: "/data"
+            - name: HERMES_WRITE_SAFE_ROOT
               value: "/data"
             - name: MATRIX_REQUIRE_MENTION
               value: "true"
@@ -100,7 +104,11 @@ spec:
             - secretRef:
                 name: hermes-credentials
           env:
+            - name: HOME
+              value: "/data/home"
             - name: HERMES_HOME
+              value: "/data"
+            - name: HERMES_WRITE_SAFE_ROOT
               value: "/data"
             - name: MATRIX_REQUIRE_MENTION
               value: "true"
