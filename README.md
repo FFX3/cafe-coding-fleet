@@ -435,21 +435,7 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 
 ~$70/month CAD. See [docs/gcp-costs.md](docs/gcp-costs.md) for details and pricing sources.
 
-## Milestones
-
-### Completed
-
-1. ~~Talos Bootstrap~~ - Single-node Kubernetes on GCP
-2. ~~Cloudflare DNS + Nginx Ingress~~ - HTTPS with Let's Encrypt
-3. ~~PostgreSQL with persistent storage~~ - Shared database server
-4. ~~Twenty CRM deployment~~ - CRM application
-
 ### Planned
-
-5. **Conduit** - Matrix homeserver for chat/communication
-   - Lightweight Rust implementation
-   - Mobile app access via Element
-   - Always-on for message delivery
 
 6. **soft-serve** - Git server for code backup
    - SSH-based, minimal overhead
@@ -460,8 +446,3 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
    - Web-based file browser
    - Upload/download files
    - For Hermes agent file access
-
-8. **Hermes Agent** - AI assistant with cluster access
-   - Full access to all services
-   - Query databases, manage files
-   - Chat interface via Matrix
