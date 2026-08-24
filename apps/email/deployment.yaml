@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email
+  namespace: email
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postfix
+          image: boky/postfix:latest
+          ports:
+            - containerPort: 587
+              name: smtp
+          env:
+            - name: RELAYHOST
+              value: "smtp.resend.com:587"
+            - name: RELAYHOST_USERNAME
+              value: "resend"
+            - name: RELAYHOST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: email-credentials
+                  key: RESEND_API_KEY
+            - name: ALLOWED_SENDER_DOMAINS
+              value: "justinmcintyre.com"
+            - name: SMTP_PORT
+              value: "587"
+            - name: POSTFIX_smtpd_tls_security_level
+              value: "none"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            tcpSocket:
+              port: 587
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 587
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -12,6 +12,9 @@ echo ""
 "$SCRIPT_DIR/deploy-postgres.sh"
 echo ""
 
+"$SCRIPT_DIR/deploy-email.sh"
+echo ""
+
 "$SCRIPT_DIR/deploy-gotrue.sh"
 echo ""
 
@@ -25,6 +28,9 @@ echo ""
 echo ""
 
 "$SCRIPT_DIR/deploy-hermes.sh"
+echo ""
+
+"$SCRIPT_DIR/deploy-passbolt.sh"
 echo ""
 
 "$SCRIPT_DIR/deploy-test-apps.sh"

@@ -110,6 +110,72 @@ spec:
               value: "/data"
             - name: HERMES_WRITE_SAFE_ROOT
               value: "/data"
+            - name: MATRIX_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-credentials
+                  key: HERMES_MATRIX_USER_ID
+            - name: MATRIX_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-credentials
+                  key: HERMES_MATRIX_PASSWORD
+            - name: MATRIX_REQUIRE_MENTION
+              value: "true"
+            - name: MATRIX_HOMESERVER
+              value: "https://matrix.justinmcintyre.com"
+            - name: MATRIX_ALLOWED_USERS
+              value: "@justin:matrix.justinmcintyre.com"
+            - name: MATRIX_ALLOWED_ROOMS
+              value: "!ops:matrix.justinmcintyre.com"
+            - name: MATRIX_IGNORE_USER_PATTERNS
+              value: "^@telegram_,^@whatsapp_" #just examples so I don't forget
+            - name: MATRIX_PROCESS_NOTICES
+              value: "false"
+            - name: MATRIX_SESSION_SCOPE
+              value: "room"
+            - name: MATRIX_GROUP_SESSIONS_PER_USER
+              value: "false"
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "50m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+        - name: peitho-gateway
+          image: nousresearch/hermes-agent:latest
+          command: ["hermes", "gateway", "-p", "peitho"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          envFrom:
+            - secretRef:
+                name: hermes-credentials
+          env:
+            - name: HOME
+              value: "/data/home"
+            - name: HERMES_HOME
+              value: "/data"
+            - name: HERMES_WRITE_SAFE_ROOT
+              value: "/data"
+            - name: MATRIX_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-credentials
+                  key: PEITHO_MATRIX_USER_ID
+            - name: MATRIX_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-credentials
+                  key: PEITHO_MATRIX_PASSWORD
             - name: MATRIX_REQUIRE_MENTION
               value: "true"
             - name: MATRIX_HOMESERVER
