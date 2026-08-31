@@ -124,6 +124,16 @@ nix develop
 
 This gives you: `talosctl`, `kubectl`, `terraform`, `gcloud`, `sops`, `age`
 
+### Discover Available Commands
+
+All commands are auto-generated from `scripts/*.sh`. To see what's available:
+
+```bash
+nix flake show
+```
+
+Add a new script to `scripts/` and `git add` it - it automatically becomes a `nix run` command. See [docs/nix-flake.md](docs/nix-flake.md) for details.
+
 ### Authenticate with GCP (first time only)
 
 ```bash
@@ -409,6 +419,7 @@ See [docs/sops-secrets.md](docs/sops-secrets.md) for the full guide.
 
 ## Further Reading
 
+- [docs/nix-flake.md](docs/nix-flake.md) - How the Nix flake works, auto-discovery, adding commands
 - [docs/kubernetes-basics.md](docs/kubernetes-basics.md) - Pods, nodes, taints, and why we remove the control-plane taint
 - [docs/gcp-costs.md](docs/gcp-costs.md) - Cost breakdown, pricing sources, and how to verify billing
 - [docs/sops-secrets.md](docs/sops-secrets.md) - SOPS/age key management and troubleshooting
