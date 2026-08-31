@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - passbolt.justinmcintyre.com
+        - passbolt.${DOMAIN}
       secretName: passbolt-tls
   rules:
-    - host: passbolt.justinmcintyre.com
+    - host: passbolt.${DOMAIN}
       http:
         paths:
           - path: /

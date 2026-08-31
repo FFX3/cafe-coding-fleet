@@ -12,10 +12,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - matrix.justinmcintyre.com
+        - matrix.${DOMAIN}
       secretName: conduit-tls
   rules:
-    - host: matrix.justinmcintyre.com
+    - host: matrix.${DOMAIN}
       http:
         paths:
           - path: /

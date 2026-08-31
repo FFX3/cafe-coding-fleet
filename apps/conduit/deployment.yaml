@@ -33,31 +33,10 @@ spec:
           ports:
             - containerPort: 6167
           envFrom:
+            - configMapRef:
+                name: conduit-config
             - secretRef:
                 name: conduit-credentials
-          env:
-            - name: CONDUIT_SERVER_NAME
-              value: "matrix.justinmcintyre.com"
-            - name: CONDUIT_DATABASE_BACKEND
-              value: "rocksdb"
-            - name: CONDUIT_DATABASE_PATH
-              value: "/var/lib/matrix-conduit"
-            - name: CONDUIT_PORT
-              value: "6167"
-            - name: CONDUIT_ADDRESS
-              value: "0.0.0.0"
-            - name: CONDUIT_ALLOW_REGISTRATION
-              value: "true"
-            - name: CONDUIT_ALLOW_FEDERATION
-              value: "true"
-            - name: CONDUIT_TRUSTED_SERVERS
-              value: '["matrix.org"]'
-            - name: CONDUIT_MAX_REQUEST_SIZE
-              value: "20000000"
-            - name: CONDUIT_ENABLE_LIGHTNING_BOLT
-              value: "false"
-            - name: CONDUIT_CONFIG
-              value: ""
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

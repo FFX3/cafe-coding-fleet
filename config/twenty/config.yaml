@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: twenty-config
+  namespace: twenty
+data:
+  NODE_PORT: "3000"
+  SERVER_URL: https://crm.${DOMAIN}
+  FRONT_BASE_URL: https://crm.${DOMAIN}
+  REDIS_URL: redis://redis.twenty.svc.cluster.local:6379
+  STORAGE_TYPE: local
+  STORAGE_LOCAL_PATH: .local-storage
+  DISABLE_DB_MIGRATIONS: "false"
+  SIGN_IN_PREFILLED: "false"
+  IS_BILLING_ENABLED: "false"

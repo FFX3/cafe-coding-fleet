@@ -27,6 +27,7 @@
           sops
           age
           docker
+          yq-go
         ];
 
         # Helper to create an app from a script (scriptPath is relative to repo root)

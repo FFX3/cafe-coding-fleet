@@ -22,17 +22,10 @@ spec:
           image: supabase/gotrue:v2.192.0
           command: ["gotrue", "migrate"]
           envFrom:
+            - configMapRef:
+                name: gotrue-config
             - secretRef:
                 name: gotrue-credentials
-          env:
-            - name: GOTRUE_DB_DRIVER
-              value: "postgres"
-            - name: API_EXTERNAL_URL
-              value: "https://justinmcintyre.com"
-            - name: GOTRUE_SITE_URL
-              value: "https://justinmcintyre.com"
-            - name: GOTRUE_JWT_VALID_METHODS
-              value: "RS256"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
@@ -46,60 +39,10 @@ spec:
           ports:
             - containerPort: 9999
           envFrom:
+            - configMapRef:
+                name: gotrue-config
             - secretRef:
                 name: gotrue-credentials
-          env:
-            # Core
-            - name: GOTRUE_DB_DRIVER
-              value: "postgres"
-            - name: GOTRUE_API_HOST
-              value: "0.0.0.0"
-            - name: GOTRUE_API_PORT
-              value: "9999"
-
-            # URLs
-            - name: API_EXTERNAL_URL
-              value: "https://auth.justinmcintyre.com"
-            - name: GOTRUE_SITE_URL
-              value: "https://studio.justinmcintyre.com"
-            - name: GOTRUE_URI_ALLOW_LIST
-              value: "https://hermes.justinmcintyre.com/**,https://studio.justinmcintyre.com/**,https://crm.justinmcintyre.com/**"
-
-            # JWT config
-            - name: GOTRUE_JWT_EXP
-              value: "3600"
-            - name: GOTRUE_JWT_AUD
-              value: "authenticated"
-            - name: GOTRUE_JWT_ADMIN_ROLES
-              value: "service_role"
-            - name: GOTRUE_JWT_ISSUER
-              value: "https://auth.justinmcintyre.com"
-
-            # OAuth 2.1 / OIDC provider mode
-            - name: GOTRUE_OAUTH_SERVER_ENABLED
-              value: "true"
-            - name: GOTRUE_OAUTH_SERVER_AUTHORIZATION_PATH
-              value: "/oauth/consent"
-
-            # Auth methods - disable public signup, only deploy script creates users via admin API
-            - name: GOTRUE_DISABLE_SIGNUP
-              value: "true"
-            - name: GOTRUE_EXTERNAL_EMAIL_ENABLED
-              value: "true"
-            - name: GOTRUE_EXTERNAL_PHONE_ENABLED
-              value: "false"
-            - name: GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED
-              value: "false"
-
-            # Disable email confirmation for now (no SMTP)
-            - name: GOTRUE_MAILER_AUTOCONFIRM
-              value: "true"
-
-            # Security
-            - name: GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED
-              value: "true"
-            - name: GOTRUE_MFA_TOTP_ENROLL_ENABLED
-              value: "true"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

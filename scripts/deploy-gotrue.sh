@@ -4,7 +4,11 @@ source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
-GOTRUE_DIR="$ROOT_DIR/apps/gotrue"
+CONFIG_DIR="$ROOT_DIR/config/gotrue"
+APPS_DIR="$ROOT_DIR/apps/gotrue"
+
+# Read domain from config
+DOMAIN=$(yq '.domain' "$ROOT_DIR/config/domain.yaml")
 
 # Ensure postgres is running
 if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
@@ -15,7 +19,7 @@ fi
 
 # Create GoTrue PostgreSQL user and auth schema in main postgres database
 echo "Creating GoTrue user and auth schema..."
-GOTRUE_PASSWORD=$(sops --decrypt "$GOTRUE_DIR/secret.enc.yaml" | grep DATABASE_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
+GOTRUE_PASSWORD=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | grep DATABASE_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
 kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='gotrue'" | grep -q 1 || \
     kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER gotrue WITH ENCRYPTED PASSWORD '$GOTRUE_PASSWORD'"
 kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE EXTENSION IF NOT EXISTS pgcrypto"
@@ -23,20 +27,25 @@ kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE SCH
 kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "GRANT ALL ON SCHEMA auth TO gotrue"
 
 echo "Deploying GoTrue..."
-kubectl apply -f "$GOTRUE_DIR/namespace.yaml"
-sops --decrypt "$GOTRUE_DIR/secret.enc.yaml" | kubectl apply -f -
-kubectl apply -f "$GOTRUE_DIR/deployment.yaml"
-kubectl apply -f "$GOTRUE_DIR/service.yaml"
-kubectl apply -f "$GOTRUE_DIR/ingress.yaml"
+kubectl apply -f "$APPS_DIR/namespace.yaml"
+
+# Apply config (with domain substitution)
+sed "s/\${DOMAIN}/$DOMAIN/g" "$CONFIG_DIR/config.yaml" | kubectl apply -f -
+sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | kubectl apply -f -
+
+# Apply manifests (with domain substitution for ingress)
+kubectl apply -f "$APPS_DIR/deployment.yaml"
+kubectl apply -f "$APPS_DIR/service.yaml"
+sed "s/\${DOMAIN}/$DOMAIN/g" "$APPS_DIR/ingress.yaml" | kubectl apply -f -
 kubectl rollout restart deployment/gotrue -n gotrue
 kubectl rollout status deployment/gotrue -n gotrue --timeout=120s
 
 # Create users from config (direct database insert)
-if [[ -f "$GOTRUE_DIR/users.enc.yaml" ]]; then
+if [[ -f "$CONFIG_DIR/users.enc.yaml" ]]; then
     echo "Creating GoTrue users..."
 
     # Parse users from SOPS-encrypted YAML
-    USERS_YAML=$(sops --decrypt "$GOTRUE_DIR/users.enc.yaml")
+    USERS_YAML=$(sops --decrypt "$CONFIG_DIR/users.enc.yaml")
 
     echo "$USERS_YAML" | grep -E "^\s*-\s*email:" | while read -r line; do
         EMAIL=$(echo "$line" | sed 's/.*email:\s*//' | tr -d '"' | xargs)
@@ -68,7 +77,7 @@ if [[ -f "$GOTRUE_DIR/users.enc.yaml" ]]; then
 fi
 
 echo ""
-echo "GoTrue deployed at https://auth.justinmcintyre.com"
+echo "GoTrue deployed at https://auth.$DOMAIN"
 echo ""
 echo "Health check:"
-echo "  curl https://auth.justinmcintyre.com/health"
+echo "  curl https://auth.$DOMAIN/health"

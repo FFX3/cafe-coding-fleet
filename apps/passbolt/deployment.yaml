@@ -34,31 +34,10 @@ spec:
             - containerPort: 443
               name: https
           envFrom:
+            - configMapRef:
+                name: passbolt-config
             - secretRef:
                 name: passbolt-credentials
-          env:
-            - name: APP_FULL_BASE_URL
-              value: "https://passbolt.justinmcintyre.com"
-            - name: DATASOURCES_DEFAULT_DRIVER
-              value: "Cake\\Database\\Driver\\Postgres"
-            - name: DATASOURCES_DEFAULT_ENCODING
-              value: "utf8"
-            - name: PASSBOLT_SSL_FORCE
-              value: "true"
-            - name: PASSBOLT_REGISTRATION_PUBLIC
-              value: "false"
-            - name: PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED
-              value: "true"
-            - name: EMAIL_TRANSPORT_DEFAULT_HOST
-              value: "smtp.email.svc.cluster.local"
-            - name: EMAIL_TRANSPORT_DEFAULT_PORT
-              value: "587"
-            - name: EMAIL_TRANSPORT_DEFAULT_TLS
-              value: "false"
-            - name: EMAIL_DEFAULT_FROM
-              value: "passbolt@justinmcintyre.com"
-            - name: EMAIL_DEFAULT_FROM_NAME
-              value: "Passbolt"
           volumeMounts:
             - name: passbolt-data
               mountPath: /var/lib/passbolt

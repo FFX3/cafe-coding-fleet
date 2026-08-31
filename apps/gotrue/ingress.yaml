@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - auth.justinmcintyre.com
+        - auth.${DOMAIN}
       secretName: gotrue-tls
   rules:
-    - host: auth.justinmcintyre.com
+    - host: auth.${DOMAIN}
       http:
         paths:
           - path: /

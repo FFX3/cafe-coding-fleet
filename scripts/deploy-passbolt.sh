@@ -4,7 +4,11 @@ source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
-PASSBOLT_DIR="$ROOT_DIR/apps/passbolt"
+CONFIG_DIR="$ROOT_DIR/config/passbolt"
+APPS_DIR="$ROOT_DIR/apps/passbolt"
+
+# Read domain from config
+DOMAIN=$(yq '.domain' "$ROOT_DIR/config/domain.yaml")
 
 # Ensure postgres is running
 if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
@@ -15,27 +19,32 @@ fi
 
 # Create passbolt PostgreSQL user and database
 echo "Creating passbolt database and user..."
-PASSBOLT_PASSWORD=$(sops --decrypt "$PASSBOLT_DIR/secret.enc.yaml" | grep DATASOURCES_DEFAULT_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
+PASSBOLT_PASSWORD=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | grep DATASOURCES_DEFAULT_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
 kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='passbolt'" | grep -q 1 || \
     kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER passbolt WITH ENCRYPTED PASSWORD '$PASSBOLT_PASSWORD'"
 kubectl exec -n postgres statefulset/postgres -- psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='passbolt'" | grep -q 1 || \
     kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE passbolt OWNER passbolt"
 
 echo "Deploying Passbolt..."
-kubectl apply -f "$PASSBOLT_DIR/namespace.yaml"
-sops --decrypt "$PASSBOLT_DIR/secret.enc.yaml" | kubectl apply -f -
-kubectl apply -f "$PASSBOLT_DIR/pv.yaml"
-kubectl apply -f "$PASSBOLT_DIR/pvc.yaml"
-kubectl apply -f "$PASSBOLT_DIR/deployment.yaml"
-kubectl apply -f "$PASSBOLT_DIR/service.yaml"
-kubectl apply -f "$PASSBOLT_DIR/ingress.yaml"
+kubectl apply -f "$APPS_DIR/namespace.yaml"
+
+# Apply config (with domain substitution)
+sed "s/\${DOMAIN}/$DOMAIN/g" "$CONFIG_DIR/config.yaml" | kubectl apply -f -
+sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | kubectl apply -f -
+
+# Apply manifests (with domain substitution for ingress)
+kubectl apply -f "$APPS_DIR/pv.yaml"
+kubectl apply -f "$APPS_DIR/pvc.yaml"
+kubectl apply -f "$APPS_DIR/deployment.yaml"
+kubectl apply -f "$APPS_DIR/service.yaml"
+sed "s/\${DOMAIN}/$DOMAIN/g" "$APPS_DIR/ingress.yaml" | kubectl apply -f -
 kubectl rollout status deployment/passbolt -n passbolt --timeout=300s
 
 # Create users from config
-if [[ -f "$PASSBOLT_DIR/users.enc.yaml" ]]; then
+if [[ -f "$CONFIG_DIR/users.enc.yaml" ]]; then
     echo "Creating Passbolt users..."
 
-    USERS_YAML=$(sops --decrypt "$PASSBOLT_DIR/users.enc.yaml")
+    USERS_YAML=$(sops --decrypt "$CONFIG_DIR/users.enc.yaml")
 
     # Extract each user block and process
     echo "$USERS_YAML" | grep -E "^\s*-\s*email:" | while read -r line; do
@@ -79,4 +88,4 @@ if [[ -f "$PASSBOLT_DIR/users.enc.yaml" ]]; then
 fi
 
 echo ""
-echo "Passbolt deployed at https://passbolt.justinmcintyre.com"
+echo "Passbolt deployed at https://passbolt.$DOMAIN"

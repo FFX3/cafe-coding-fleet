@@ -4,6 +4,11 @@ source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
+CONFIG_DIR="$ROOT_DIR/config/hermes"
+APPS_DIR="$ROOT_DIR/apps/hermes"
+
+# Read domain from config
+DOMAIN=$(yq '.domain' "$ROOT_DIR/config/domain.yaml")
 
 # Ensure postgres is running (hermes depends on it)
 if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
@@ -13,7 +18,7 @@ if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
 fi
 
 # Decrypt secret once and extract values
-HERMES_SECRET_YAML=$(sops --decrypt "$ROOT_DIR/apps/hermes/secret.enc.yaml")
+HERMES_SECRET_YAML=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml")
 
 # Create Hermes PostgreSQL user and database (same pattern as twenty)
 echo "Creating Hermes database and user..."
@@ -27,7 +32,7 @@ kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d hermes -c "
 # Register Hermes as OAuth client in GoTrue (if GoTrue is deployed)
 # Client ID is read from the SOPS secret to ensure consistency
 HERMES_CLIENT_ID=$(echo "$HERMES_SECRET_YAML" | grep HERMES_DASHBOARD_OIDC_CLIENT_ID | sed 's/.*HERMES_DASHBOARD_OIDC_CLIENT_ID:\s*//' | tr -d '"' | xargs)
-HERMES_REDIRECT_URI="https://hermes.justinmcintyre.com/auth/callback"
+HERMES_REDIRECT_URI="https://hermes.$DOMAIN/auth/callback"
 
 if [[ -z "$HERMES_CLIENT_ID" ]]; then
     echo "Warning: HERMES_DASHBOARD_OIDC_CLIENT_ID not found in secret, skipping OAuth registration"
@@ -75,17 +80,22 @@ else
 fi
 
 echo "Deploying Hermes..."
-kubectl apply -f "$ROOT_DIR/apps/hermes/namespace.yaml"
-sops --decrypt "$ROOT_DIR/apps/hermes/secret.enc.yaml" | kubectl apply -f -
-kubectl apply -f "$ROOT_DIR/apps/hermes/pv.yaml"
-kubectl apply -f "$ROOT_DIR/apps/hermes/pvc.yaml"
-kubectl apply -f "$ROOT_DIR/apps/hermes/deployment.yaml"
-kubectl apply -f "$ROOT_DIR/apps/hermes/service.yaml"
-kubectl apply -f "$ROOT_DIR/apps/hermes/ingress.yaml"
+kubectl apply -f "$APPS_DIR/namespace.yaml"
+
+# Apply config (with domain substitution)
+sed "s/\${DOMAIN}/$DOMAIN/g" "$CONFIG_DIR/config.yaml" | kubectl apply -f -
+sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | kubectl apply -f -
+
+# Apply manifests (with domain substitution for ingress)
+kubectl apply -f "$APPS_DIR/pv.yaml"
+kubectl apply -f "$APPS_DIR/pvc.yaml"
+kubectl apply -f "$APPS_DIR/deployment.yaml"
+kubectl apply -f "$APPS_DIR/service.yaml"
+sed "s/\${DOMAIN}/$DOMAIN/g" "$APPS_DIR/ingress.yaml" | kubectl apply -f -
 kubectl rollout status deployment/hermes -n hermes --timeout=120s
 
 echo ""
-echo "Hermes deployed at https://hermes.justinmcintyre.com"
+echo "Hermes deployed at https://hermes.$DOMAIN"
 echo ""
 echo "TUI access:"
 echo "  nix run .#hermes"

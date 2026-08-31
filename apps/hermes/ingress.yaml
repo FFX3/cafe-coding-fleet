@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - hermes.justinmcintyre.com
+        - hermes.${DOMAIN}
       secretName: hermes-tls
   rules:
-    - host: hermes.justinmcintyre.com
+    - host: hermes.${DOMAIN}
       http:
         paths:
           - path: /

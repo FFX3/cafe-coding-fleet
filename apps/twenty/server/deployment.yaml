@@ -34,27 +34,10 @@ spec:
           ports:
             - containerPort: 3000
           envFrom:
+            - configMapRef:
+                name: twenty-config
             - secretRef:
                 name: twenty-credentials
-          env:
-            - name: NODE_PORT
-              value: "3000"
-            - name: SERVER_URL
-              value: "https://crm.justinmcintyre.com"
-            - name: FRONT_BASE_URL
-              value: "https://crm.justinmcintyre.com"
-            - name: REDIS_URL
-              value: "redis://redis.twenty.svc.cluster.local:6379"
-            - name: STORAGE_TYPE
-              value: "local"
-            - name: STORAGE_LOCAL_PATH
-              value: ".local-storage"
-            - name: DISABLE_DB_MIGRATIONS
-              value: "false"
-            - name: SIGN_IN_PREFILLED
-              value: "false"
-            - name: IS_BILLING_ENABLED
-              value: "false"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

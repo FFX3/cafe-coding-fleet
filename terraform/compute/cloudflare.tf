@@ -1,81 +1,26 @@
 # Cloudflare DNS records
 # Automatically updates when cluster IP changes
 
-resource "cloudflare_record" "test" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "test"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
+locals {
+  # All subdomains that need DNS records pointing to the cluster
+  subdomains = [
+    "test",
+    "test2",
+    "crm",
+    "matrix",
+    "auth",
+    "hermes",
+    "studio",
+    "shell",
+    "passbolt",
+  ]
 }
 
-resource "cloudflare_record" "test2" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "test2"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
+resource "cloudflare_record" "services" {
+  for_each = toset(local.subdomains)
 
-resource "cloudflare_record" "crm" {
   zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "crm"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "matrix" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "matrix"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "auth" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "auth"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "hermes" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "hermes"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "studio" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "studio"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "shell" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "shell"
-  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
-  type    = "A"
-  ttl     = 60
-  proxied = false
-}
-
-resource "cloudflare_record" "passbolt" {
-  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
-  name    = "passbolt"
+  name    = each.key
   content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
   type    = "A"
   ttl     = 60

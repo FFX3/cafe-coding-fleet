@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-config
+  namespace: hermes
+data:
+  HOME: /data/home
+  HERMES_HOME: /data
+  HERMES_WRITE_SAFE_ROOT: /data
+  MATRIX_REQUIRE_MENTION: "true"
+  MATRIX_HOMESERVER: https://matrix.${DOMAIN}
+  MATRIX_ALLOWED_USERS: "@justin:matrix.${DOMAIN}"
+  MATRIX_ALLOWED_ROOMS: "!ops:matrix.${DOMAIN}"
+  MATRIX_IGNORE_USER_PATTERNS: "^@telegram_,^@whatsapp_"
+  MATRIX_PROCESS_NOTICES: "false"
+  MATRIX_SESSION_SCOPE: room
+  MATRIX_GROUP_SESSIONS_PER_USER: "false"

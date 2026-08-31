@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: passbolt-config
+  namespace: passbolt
+data:
+  APP_FULL_BASE_URL: https://passbolt.${DOMAIN}
+  DATASOURCES_DEFAULT_DRIVER: Cake\Database\Driver\Postgres
+  DATASOURCES_DEFAULT_ENCODING: utf8
+  PASSBOLT_SSL_FORCE: "true"
+  PASSBOLT_REGISTRATION_PUBLIC: "false"
+  PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED: "true"
+  EMAIL_TRANSPORT_DEFAULT_HOST: smtp.email.svc.cluster.local
+  EMAIL_TRANSPORT_DEFAULT_PORT: "587"
+  EMAIL_TRANSPORT_DEFAULT_TLS: "false"
+  EMAIL_DEFAULT_FROM: passbolt@${DOMAIN}
+  EMAIL_DEFAULT_FROM_NAME: Passbolt

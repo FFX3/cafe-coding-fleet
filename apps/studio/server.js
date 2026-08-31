@@ -6,7 +6,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-const GOTRUE_URL = process.env.GOTRUE_URL || 'https://auth.justinmcintyre.com';
+const GOTRUE_URL = process.env.GOTRUE_URL || 'http://localhost:9999';
 
 // Common styles
 const styles = `

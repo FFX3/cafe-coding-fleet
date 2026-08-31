@@ -22,22 +22,15 @@ spec:
           ports:
             - containerPort: 587
               name: smtp
+          envFrom:
+            - configMapRef:
+                name: email-config
           env:
-            - name: RELAYHOST
-              value: "smtp.resend.com:587"
-            - name: RELAYHOST_USERNAME
-              value: "resend"
             - name: RELAYHOST_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: email-credentials
                   key: RESEND_API_KEY
-            - name: ALLOWED_SENDER_DOMAINS
-              value: "justinmcintyre.com"
-            - name: SMTP_PORT
-              value: "587"
-            - name: POSTFIX_smtpd_tls_security_level
-              value: "none"
           resources:
             requests:
               memory: "64Mi"

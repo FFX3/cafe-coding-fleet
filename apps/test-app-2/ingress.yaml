@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - test2.justinmcintyre.com
+        - test2.${DOMAIN}
       secretName: test-app-2-tls
   rules:
-    - host: test2.justinmcintyre.com
+    - host: test2.${DOMAIN}
       http:
         paths:
           - path: /

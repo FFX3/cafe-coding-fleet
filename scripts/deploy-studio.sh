@@ -4,8 +4,12 @@ source "$(dirname "$0")/internal/require-env.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
-STUDIO_DIR="$ROOT_DIR/apps/studio"
+CONFIG_DIR="$ROOT_DIR/config/studio"
+APPS_DIR="$ROOT_DIR/apps/studio"
 TERRAFORM_DIR="$ROOT_DIR/terraform/compute"
+
+# Read domain from config
+DOMAIN=$(yq '.domain' "$ROOT_DIR/config/domain.yaml")
 
 # Get registry URL from terraform
 cd "$TERRAFORM_DIR"
@@ -26,13 +30,16 @@ echo "Configuring Docker authentication for Artifact Registry..."
 gcloud auth configure-docker "${REGISTRY%%/*}" --quiet
 
 echo "Building Studio image..."
-docker build -t "$FULL_IMAGE" "$STUDIO_DIR"
+docker build -t "$FULL_IMAGE" "$APPS_DIR"
 
 echo "Pushing image to Artifact Registry..."
 docker push "$FULL_IMAGE"
 
 echo "Deploying Studio..."
-kubectl apply -f "$STUDIO_DIR/namespace.yaml"
+kubectl apply -f "$APPS_DIR/namespace.yaml"
+
+# Apply config (with domain substitution)
+sed "s/\${DOMAIN}/$DOMAIN/g" "$CONFIG_DIR/config.yaml" | kubectl apply -f -
 
 # Create image pull secret from terraform output
 echo "Creating image pull secret..."
@@ -45,15 +52,15 @@ kubectl create secret docker-registry gcr-credentials \
     --dry-run=client -o yaml | kubectl apply -f -
 
 # Update deployment with actual image and apply
-cat "$STUDIO_DIR/deployment.yaml" | \
+cat "$APPS_DIR/deployment.yaml" | \
     sed "s|image: studio:latest|image: $FULL_IMAGE|g" | \
     sed 's|imagePullPolicy: Never|imagePullPolicy: Always|g' | \
     kubectl apply -f -
 
-kubectl apply -f "$STUDIO_DIR/service.yaml"
-kubectl apply -f "$STUDIO_DIR/ingress.yaml"
+kubectl apply -f "$APPS_DIR/service.yaml"
+sed "s/\${DOMAIN}/$DOMAIN/g" "$APPS_DIR/ingress.yaml" | kubectl apply -f -
 kubectl rollout restart deployment/studio -n studio
 kubectl rollout status deployment/studio -n studio --timeout=120s
 
 echo ""
-echo "Studio deployed at https://studio.justinmcintyre.com"
+echo "Studio deployed at https://studio.$DOMAIN"

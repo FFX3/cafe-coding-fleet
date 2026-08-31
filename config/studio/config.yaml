@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: studio-config
+  namespace: studio
+data:
+  GOTRUE_URL: https://auth.${DOMAIN}
+  PORT: "3000"

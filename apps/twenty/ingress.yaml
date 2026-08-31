@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - crm.justinmcintyre.com
+        - crm.${DOMAIN}
       secretName: twenty-tls
   rules:
-    - host: crm.justinmcintyre.com
+    - host: crm.${DOMAIN}
       http:
         paths:
           - path: /

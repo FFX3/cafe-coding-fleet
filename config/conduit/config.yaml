@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conduit-config
+  namespace: conduit
+data:
+  CONDUIT_SERVER_NAME: matrix.${DOMAIN}
+  CONDUIT_DATABASE_BACKEND: rocksdb
+  CONDUIT_DATABASE_PATH: /var/lib/matrix-conduit
+  CONDUIT_PORT: "6167"
+  CONDUIT_ADDRESS: 0.0.0.0
+  CONDUIT_ALLOW_REGISTRATION: "true"
+  CONDUIT_ALLOW_FEDERATION: "true"
+  CONDUIT_TRUSTED_SERVERS: '["matrix.org"]'
+  CONDUIT_MAX_REQUEST_SIZE: "20000000"
+  CONDUIT_ENABLE_LIGHTNING_BOLT: "false"
+  CONDUIT_CONFIG: ""

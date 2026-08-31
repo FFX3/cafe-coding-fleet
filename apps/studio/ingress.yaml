@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - studio.justinmcintyre.com
+        - studio.${DOMAIN}
       secretName: studio-tls
   rules:
-    - host: studio.justinmcintyre.com
+    - host: studio.${DOMAIN}
       http:
         paths:
           - path: /
