@@ -17,13 +17,7 @@ if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
     exit 1
 fi
 
-# Create passbolt PostgreSQL user and database
-echo "Creating passbolt database and user..."
-PASSBOLT_PASSWORD=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | grep DATASOURCES_DEFAULT_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='passbolt'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER passbolt WITH ENCRYPTED PASSWORD '$PASSBOLT_PASSWORD'"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='passbolt'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE passbolt OWNER passbolt"
+# Database setup is now handled by deploy-postgres.sh via setup-databases.sh
 
 echo "Deploying Passbolt..."
 kubectl apply -f "$APPS_DIR/namespace.yaml"

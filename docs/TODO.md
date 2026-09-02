@@ -14,11 +14,12 @@ Why yq over grep/awk:
 Scripts currently using yq:
 - deploy-conduit.sh
 - deploy-email.sh
-- deploy-gotrue.sh
+- deploy-platform-services.sh
 - deploy-hermes.sh
 - deploy-passbolt.sh
 - deploy-studio.sh
 - deploy-test-apps.sh
 - deploy-twenty.sh
-
-Already added to flake.nix but not committed yet.
+- deploy-webstudio.sh
+- internal/setup-databases.sh
+- internal/setup-domains.sh

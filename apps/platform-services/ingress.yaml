@@ -1,0 +1,59 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: platform-services-auth
+  namespace: platform-services
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - auth.${DOMAIN}
+      secretName: gotrue-tls
+  rules:
+    - host: auth.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gotrue
+                port:
+                  number: 9999
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: platform-services-api
+  namespace: platform-services
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.${DOMAIN}
+      secretName: api-tls
+  rules:
+    - host: api.${DOMAIN}
+      http:
+        paths:
+          # PostgREST for webstudio database
+          - path: /webstudio(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: postgrest-webstudio
+                port:
+                  number: 3000
+          # Add more PostgREST instances here as needed:
+          # - path: /twenty(/|$)(.*)
+          #   pathType: ImplementationSpecific
+          #   backend:
+          #     service:
+          #       name: postgrest-twenty
+          #       port:
+          #         number: 3000

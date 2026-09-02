@@ -15,7 +15,10 @@ echo ""
 "$SCRIPT_DIR/deploy-email.sh"
 echo ""
 
-"$SCRIPT_DIR/deploy-gotrue.sh"
+"$SCRIPT_DIR/deploy-platform-services.sh"
+echo ""
+
+"$SCRIPT_DIR/deploy-webstudio.sh"
 echo ""
 
 "$SCRIPT_DIR/deploy-studio.sh"

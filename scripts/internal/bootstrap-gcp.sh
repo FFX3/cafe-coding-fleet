@@ -133,32 +133,54 @@ echo ""
 echo ""
 echo "Creating application namespaces..."
 kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/platform-services/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/conduit/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/gotrue/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/hermes/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/apps/studio/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/passbolt/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/apps/webstudio/namespace.yaml"
 
 # Restore certificates if available (before deploying apps that create ingresses)
+# Reads from config/domains.yaml for consistency with backup-certs.sh
 restore_certificates() {
     local CERTS_DIR="$ROOT_DIR/certs"
+    local CONFIG_FILE="$ROOT_DIR/config/domains.yaml"
 
-    if ! ls "$CERTS_DIR"/*.enc.yaml >/dev/null 2>&1; then
-        echo ""
-        echo "No stored certificates found, new ones will be requested from Let's Encrypt"
-        echo ""
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "Warning: $CONFIG_FILE not found, skipping certificate restore"
         return 0
     fi
 
     echo ""
     echo "Restoring stored certificates..."
-    for cert_file in "$CERTS_DIR"/*.enc.yaml; do
-        local secret_name=$(basename "$cert_file" .enc.yaml)
-        echo "  Restoring $secret_name..."
-        sops --decrypt "$cert_file" | kubectl apply -f -
+
+    local SUBDOMAIN_COUNT=$(yq '.subdomains | length' "$CONFIG_FILE")
+    local RESTORED=0
+    local SKIPPED=0
+
+    for ((i=0; i<SUBDOMAIN_COUNT; i++)); do
+        local NAME=$(yq ".subdomains[$i].name" "$CONFIG_FILE")
+        local NAMESPACE=$(yq ".subdomains[$i].namespace // \"default\"" "$CONFIG_FILE")
+
+        local SECRET_NAME="${NAME}-tls"
+        local CERT_FILE="$CERTS_DIR/${SECRET_NAME}.enc.yaml"
+
+        if [[ -f "$CERT_FILE" ]]; then
+            echo "  Restoring $SECRET_NAME -> $NAMESPACE"
+            sops --decrypt "$CERT_FILE" | kubectl apply -n "$NAMESPACE" -f -
+            ((RESTORED++))
+        else
+            ((SKIPPED++))
+        fi
     done
-    CERTS_RESTORED=true
-    echo "Certificates restored"
+
+    if [[ $RESTORED -gt 0 ]]; then
+        CERTS_RESTORED=true
+        echo "Certificates restored: $RESTORED restored, $SKIPPED missing (will be requested from Let's Encrypt)"
+    else
+        echo "No stored certificates found, new ones will be requested from Let's Encrypt"
+    fi
     echo ""
 }
 

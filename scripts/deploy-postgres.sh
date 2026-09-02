@@ -17,3 +17,7 @@ kubectl apply -f "$APPS_DIR/service.yaml"
 kubectl rollout status statefulset/postgres -n postgres --timeout=120s
 
 echo "PostgreSQL ready."
+echo ""
+
+# Set up application databases
+"$SCRIPT_DIR/internal/setup-databases.sh"

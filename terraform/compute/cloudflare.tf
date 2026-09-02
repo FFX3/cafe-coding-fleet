@@ -1,23 +1,9 @@
 # Cloudflare DNS records
 # Automatically updates when cluster IP changes
-
-locals {
-  # All subdomains that need DNS records pointing to the cluster
-  subdomains = [
-    "test",
-    "test2",
-    "crm",
-    "matrix",
-    "auth",
-    "hermes",
-    "studio",
-    "shell",
-    "passbolt",
-  ]
-}
+# Subdomains are defined in gen-subdomains.tf (generated from config/domains.yaml)
 
 resource "cloudflare_record" "services" {
-  for_each = toset(local.subdomains)
+  for_each = toset(local.gen_subdomains)
 
   zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
   name    = each.key

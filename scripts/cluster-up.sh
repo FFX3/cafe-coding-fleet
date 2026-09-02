@@ -40,6 +40,10 @@ else
 fi
 
 echo ""
+echo "Setting up domains configuration..."
+"$ROOT_DIR/scripts/internal/setup-domains.sh"
+
+echo ""
 echo "Creating compute resources..."
 cd "$COMPUTE_DIR"
 terraform init -upgrade -reconfigure

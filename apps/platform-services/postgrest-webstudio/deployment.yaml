@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgrest-webstudio
+  namespace: platform-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgrest-webstudio
+  template:
+    metadata:
+      labels:
+        app: postgrest-webstudio
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgrest
+          image: postgrest/postgrest:v12.2.0
+          ports:
+            - containerPort: 3000
+          env:
+            # Database URL from generated secret (created by setup-databases.sh)
+            - name: PGRST_DB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: gen-postgrest-webstudio-credentials
+                  key: DATABASE_URL
+            - name: PGRST_DB_SCHEMAS
+              value: "public"
+            - name: PGRST_DB_ANON_ROLE
+              value: "webstudio"
+            # JWT secret shared with GoTrue for token validation
+            - name: PGRST_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gotrue-credentials
+                  key: GOTRUE_JWT_SECRET
+            - name: PGRST_JWT_AUD
+              value: "authenticated"
+            - name: PGRST_OPENAPI_SERVER_PROXY_URI
+              value: "https://api.${DOMAIN}/webstudio"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -4,7 +4,7 @@ Conduit Matrix users are managed declaratively via a SOPS-encrypted config file.
 
 ## How It Works
 
-1. Users are defined in `apps/conduit/users.enc.yaml`
+1. Users are defined in `config/conduit/users.enc.yaml`
 2. `deploy-conduit.sh` creates users via the Matrix registration API
 3. First user in the list becomes admin
 4. Existing users are skipped (idempotent)
@@ -14,7 +14,7 @@ Conduit Matrix users are managed declaratively via a SOPS-encrypted config file.
 Create or edit the users file:
 
 ```bash
-sops apps/conduit/users.enc.yaml
+sops config/conduit/users.enc.yaml
 ```
 
 Format:
@@ -66,7 +66,7 @@ Matrix user IDs follow the format: `@username:matrix.justinmcintyre.com`
 
 ## Registration Token
 
-The deploy script uses the `CONDUIT_REGISTRATION_TOKEN` from `apps/conduit/secret.enc.yaml` to authenticate user creation. This is handled automatically.
+The deploy script uses the `CONDUIT_REGISTRATION_TOKEN` from `config/conduit/secret.enc.yaml` to authenticate user creation. This is handled automatically.
 
 ## Changing Passwords
 
@@ -81,6 +81,6 @@ Conduit doesn't have a built-in password reset mechanism. To change a password:
 
 | File | Purpose |
 |------|---------|
-| `apps/conduit/users.enc.yaml` | SOPS-encrypted user list |
-| `apps/conduit/secret.enc.yaml` | Registration token and JWT secret |
+| `config/conduit/users.enc.yaml` | SOPS-encrypted user list |
+| `config/conduit/secret.enc.yaml` | Registration token and JWT secret |
 | `scripts/deploy-conduit.sh` | Creates users during deployment |

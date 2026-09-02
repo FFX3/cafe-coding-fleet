@@ -8,7 +8,13 @@ Uses PostgreSQL (shared postgres instance, dedicated `passbolt` database).
 
 ## Users
 
-Define users in `apps/passbolt/users.yaml`:
+Define users in `config/passbolt/users.enc.yaml`:
+
+```bash
+sops config/passbolt/users.enc.yaml
+```
+
+Format:
 
 ```yaml
 users:
@@ -21,8 +27,6 @@ users:
     last_name: User
     role: user
 ```
-
-Encrypt with sops: `sops -e users.yaml > users.enc.yaml`
 
 The deploy script creates users idempotently and outputs setup URLs. Users complete setup in their browser (Passbolt extension handles GPG key generation/import).
 

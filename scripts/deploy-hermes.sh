@@ -17,17 +17,10 @@ if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
     exit 1
 fi
 
-# Decrypt secret once and extract values
-HERMES_SECRET_YAML=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml")
+# Database setup is now handled by deploy-postgres.sh via setup-databases.sh
 
-# Create Hermes PostgreSQL user and database (same pattern as twenty)
-echo "Creating Hermes database and user..."
-HERMES_PASSWORD=$(echo "$HERMES_SECRET_YAML" | grep PG_DATABASE_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='hermes'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER hermes WITH ENCRYPTED PASSWORD '$HERMES_PASSWORD'"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='hermes'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE hermes OWNER hermes"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d hermes -c "GRANT ALL ON SCHEMA public TO hermes"
+# Decrypt secret once and extract values for OAuth registration
+HERMES_SECRET_YAML=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml")
 
 # Register Hermes as OAuth client in GoTrue (if GoTrue is deployed)
 # Client ID is read from the SOPS secret to ensure consistency
@@ -36,7 +29,7 @@ HERMES_REDIRECT_URI="https://hermes.$DOMAIN/auth/callback"
 
 if [[ -z "$HERMES_CLIENT_ID" ]]; then
     echo "Warning: HERMES_DASHBOARD_OIDC_CLIENT_ID not found in secret, skipping OAuth registration"
-elif kubectl get deployment gotrue -n gotrue &>/dev/null; then
+elif kubectl get deployment gotrue -n platform-services &>/dev/null; then
     echo "Registering Hermes OAuth client in GoTrue..."
 
     # Upsert OAuth client for Hermes dashboard

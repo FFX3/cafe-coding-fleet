@@ -1,0 +1,51 @@
+# Domain configuration for centralized management
+# Used by scripts/internal/setup-domains.sh
+
+# Base domain (from config/domain.yaml)
+# Subdomains are created as: {subdomain}.{base_domain}
+
+# All subdomains that need:
+# - Cloudflare DNS records (terraform/compute/cloudflare.tf)
+# - TLS certificates (via cert-manager)
+# - Backup in certs/*.enc.yaml
+
+subdomains:
+  # Infrastructure
+  - name: shell
+    description: Remote shell access
+
+  # Platform services
+  - name: auth
+    description: GoTrue authentication
+    namespace: platform-services
+  - name: api
+    description: PostgREST API endpoints
+    namespace: platform-services
+
+  # Applications
+  - name: studio
+    description: Studio app
+    namespace: studio
+  - name: crm
+    description: Twenty CRM
+    namespace: twenty
+  - name: matrix
+    description: Conduit Matrix server
+    namespace: conduit
+  - name: hermes
+    description: Hermes agent
+    namespace: hermes
+  - name: passbolt
+    description: Passbolt password manager
+    namespace: passbolt
+  - name: webstudio
+    description: Webstudio website builder
+    namespace: webstudio
+
+  # Test apps
+  - name: test
+    description: Test application
+    namespace: default
+  - name: test2
+    description: Test application 2
+    namespace: default

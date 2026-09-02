@@ -80,14 +80,34 @@ You should see the Cloudflare DNS record in the plan output:
 
 ## What Gets Created
 
-Terraform creates a DNS A record:
-- **Name**: `test.justinmcintyre.com`
+Terraform creates DNS A records for all subdomains defined in `config/domains.yaml`:
+
+```yaml
+subdomains:
+  - name: auth
+    description: GoTrue authentication
+    namespace: platform-services
+  - name: matrix
+    description: Conduit Matrix server
+    namespace: conduit
+  # ... etc
+```
+
+Each subdomain gets:
+- **Name**: `{name}.justinmcintyre.com`
 - **Type**: A
 - **Content**: Your GCP instance's external IP
 - **TTL**: 60 seconds (1 minute)
 - **Proxied**: No (direct connection)
 
-The record updates automatically when you redeploy (new IP).
+The records update automatically when you redeploy (new IP).
+
+## Adding New Subdomains
+
+1. Add to `config/domains.yaml`
+2. Run `nix run .#cluster-up` (or just `scripts/internal/setup-domains.sh` + terraform apply)
+
+The `setup-domains.sh` script generates `terraform/compute/gen-subdomains.tf` from the config.
 
 ## Token Security
 

@@ -76,7 +76,16 @@ spec:
                   number: 80
 ```
 
-Then add a DNS record pointing `myapp.justinmcintyre.com` to your node's IP (in `terraform/cloudflare.tf`).
+Then add the subdomain to `config/domains.yaml`:
+
+```yaml
+subdomains:
+  - name: myapp
+    description: My application
+    namespace: default
+```
+
+Run `nix run .#cluster-up` to regenerate DNS records via Terraform.
 
 ## Viewing nginx Configuration
 

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webstudio-config
+  namespace: webstudio
+data:
+  # URLs
+  DEPLOYMENT_URL: https://webstudio.${DOMAIN}
+  APP_FQDN: webstudio.${DOMAIN}
+  SELF_HOSTED_PUBLISHER_URL: http://webstudio-publisher.webstudio.svc.cluster.local:4000
+
+  # PostgREST API (in platform-services namespace)
+  POSTGREST_URL: https://api.${DOMAIN}/webstudio
+
+  # S3/MinIO storage (internal)
+  S3_ENDPOINT: http://minio.webstudio.svc.cluster.local:9000
+  S3_REGION: us-east-1
+  S3_BUCKET: webstudio-assets
+
+  # Features
+  FEATURES: "*"
+  USER_PLAN: Pro
+  MAX_ASSETS_PER_PROJECT: "50"
+
+  # Auth - use dev login for simplicity
+  DEV_LOGIN: "true"
+  DEV_LOGIN_EMAIL: admin@${DOMAIN}

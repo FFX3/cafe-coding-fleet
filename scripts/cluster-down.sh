@@ -7,6 +7,16 @@ ROOT_DIR="${ROOT_DIR:-$(dirname "$SCRIPT_DIR")}"
 PERSISTENT_DIR="$ROOT_DIR/terraform/persistent"
 COMPUTE_DIR="$ROOT_DIR/terraform/compute"
 
+# Parse arguments
+FORCE=false
+for arg in "$@"; do
+    case $arg in
+        --force|-f)
+            FORCE=true
+            ;;
+    esac
+done
+
 echo "Shutting down GCP cluster (keeping persistent disk)..."
 echo "======================================================="
 echo ""
@@ -21,13 +31,18 @@ echo "  - Artifacts bucket"
 echo ""
 echo "Cost savings: ~\$70 CAD/month -> ~\$4 CAD/month (disk only)"
 echo ""
-echo "To bring it back: ./scripts/cluster-up.sh"
+echo "To bring it back: nix run .#cluster-up"
 echo ""
 
-# Export certificates before destroying
-echo "Exporting certificates..."
-"$ROOT_DIR/scripts/internal/export-certs.sh" || echo "Warning: Failed to export certs (cluster may not be reachable)"
-echo ""
+# Export certificates before destroying (unless --force)
+if [[ "$FORCE" == "true" ]]; then
+    echo "Skipping certificate export (--force)"
+    echo ""
+else
+    echo "Exporting certificates..."
+    "$ROOT_DIR/scripts/internal/export-certs.sh" || echo "Warning: Failed to export certs (cluster may not be reachable)"
+    echo ""
+fi
 
 # Get config from persistent
 cd "$PERSISTENT_DIR"

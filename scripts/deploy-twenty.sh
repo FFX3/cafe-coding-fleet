@@ -17,13 +17,7 @@ if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
     exit 1
 fi
 
-echo "Creating Twenty database and user..."
-TWENTY_PASSWORD=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml" | grep PG_DATABASE_URL | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/' | tr -d '"')
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='twenty'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE USER twenty WITH ENCRYPTED PASSWORD '$TWENTY_PASSWORD'"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='twenty'" | grep -q 1 || \
-    kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c "CREATE DATABASE twenty OWNER twenty"
-kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d twenty -c "GRANT ALL ON SCHEMA public TO twenty"
+# Database setup is now handled by deploy-postgres.sh via setup-databases.sh
 
 echo "Deploying Twenty CRM..."
 kubectl apply -f "$APPS_DIR/namespace.yaml"

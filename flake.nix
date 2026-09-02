@@ -46,6 +46,43 @@
           }}/bin/${name}";
           meta.description = description;
         };
+
+        # Auto-discover scripts in scripts/ directory
+        scriptsDir = builtins.readDir "${self}/scripts";
+
+        # Filter to .sh files only (not directories)
+        scriptFiles = pkgs.lib.filterAttrs
+          (name: type: type == "regular" && pkgs.lib.hasSuffix ".sh" name)
+          scriptsDir;
+
+        # Convert filename to app name: remove .sh, replace _ with -
+        toAppName = filename:
+          builtins.replaceStrings ["_"] ["-"]
+            (pkgs.lib.removeSuffix ".sh" filename);
+
+        # Generate description from app name
+        toDescription = appName:
+          let
+            # Capitalize first letter of each word
+            capitalize = s:
+              let len = builtins.stringLength s;
+              in if len == 0 then ""
+                 else (pkgs.lib.toUpper (builtins.substring 0 1 s)) + (builtins.substring 1 len s);
+            words = builtins.filter (s: s != "") (pkgs.lib.splitString "-" appName);
+            capitalized = builtins.concatStringsSep " " (map capitalize words);
+          in
+            if pkgs.lib.hasPrefix "deploy-" appName
+            then "Deploy ${pkgs.lib.removePrefix "Deploy " capitalized}"
+            else capitalized;
+
+        # Generate apps from all scripts
+        autoApps = pkgs.lib.mapAttrs' (filename: _:
+          let appName = toAppName filename;
+          in {
+            name = appName;
+            value = mkApp appName (toDescription appName) "scripts/${filename}";
+          }
+        ) scriptFiles;
       in
       {
         devShells.default = pkgs.mkShell {
@@ -80,36 +117,9 @@
           '';
         };
 
-        apps = {
-          # Cluster management
-          cluster-up = mkApp "cluster-up" "Start GCP cluster" "scripts/cluster-up.sh";
-          cluster-down = mkApp "cluster-down" "Stop GCP cluster" "scripts/cluster-down.sh";
-          local-cluster = mkApp "local-cluster" "Manage local Docker cluster" "scripts/local-cluster.sh";
-
-          # Deployment
-          deploy-apps = mkApp "deploy-apps" "Deploy all applications" "scripts/deploy-apps.sh";
-          deploy-ingress = mkApp "deploy-ingress" "Deploy nginx ingress" "scripts/deploy-ingress.sh";
-          deploy-cert-manager = mkApp "deploy-cert-manager" "Deploy cert-manager" "scripts/deploy-cert-manager.sh";
-          deploy-postgres = mkApp "deploy-postgres" "Deploy PostgreSQL" "scripts/deploy-postgres.sh";
-          deploy-twenty = mkApp "deploy-twenty" "Deploy Twenty CRM" "scripts/deploy-twenty.sh";
-          deploy-conduit = mkApp "deploy-conduit" "Deploy Conduit Matrix server" "scripts/deploy-conduit.sh";
-          deploy-gotrue = mkApp "deploy-gotrue" "Deploy GoTrue auth server" "scripts/deploy-gotrue.sh";
-          deploy-hermes = mkApp "deploy-hermes" "Deploy Hermes agent" "scripts/deploy-hermes.sh";
-          deploy-studio = mkApp "deploy-studio" "Deploy Studio app" "scripts/deploy-studio.sh";
-          deploy-test-apps = mkApp "deploy-test-apps" "Deploy test applications" "scripts/deploy-test-apps.sh";
-
-          # Utilities
-          dashboard = mkApp "dashboard" "Open Talos dashboard" "scripts/dashboard.sh";
-          db-connect = mkApp "db-connect" "Connect to PostgreSQL" "scripts/db-connect.sh";
-          hermes = mkApp "hermes" "Connect to Hermes AI agent" "scripts/hermes.sh";
-          disk-usage = mkApp "disk-usage" "Show disk usage" "scripts/disk-usage.sh";
-          list-resources = mkApp "list-resources" "List GCP resources" "scripts/list-resources.sh";
-          monitor = mkApp "monitor" "Monitor cluster status" "scripts/monitor-status.sh";
-          terraform-apply = mkApp "terraform-apply" "Apply terraform (compute or persistent)" "scripts/terraform-apply.sh";
-          shell-connect = mkApp "shell-connect" "Connect to command-center shell" "scripts/shell-connect.sh";
-          shell-down = mkApp "shell-down" "Scale down command-center" "scripts/shell-down.sh";
-          deploy-command-center = mkApp "deploy-command-center" "Deploy command-center" "scripts/deploy-command-center.sh";
-        };
+        # All apps are auto-generated from scripts/*.sh
+        # Add a new script to scripts/ and it becomes available as `nix run .#script-name`
+        apps = autoApps;
       }
     );
 }

@@ -28,7 +28,7 @@ nix run .#hermes -- --help
 Create or edit the credentials:
 
 ```bash
-sops apps/hermes/secret.enc.yaml
+sops config/hermes/secret.enc.yaml
 ```
 
 Required content:
@@ -77,9 +77,10 @@ nix run .#deploy-hermes
 ```
 
 The deploy script:
-1. Creates the PostgreSQL database and user (if not exists)
-2. Deploys the namespace, secret, PV, PVC, and deployment
-3. Waits for the pod to be ready
+1. Deploys the namespace, secret, PV, PVC, and deployment
+2. Waits for the pod to be ready
+
+Note: Database creation is handled centrally by `setup-databases.sh` (called from `deploy-postgres.sh`).
 
 ## Resource Limits
 
@@ -96,7 +97,7 @@ The deploy script:
 | `apps/hermes/pv.yaml` | Persistent volume (hostPath) |
 | `apps/hermes/pvc.yaml` | Persistent volume claim |
 | `apps/hermes/deployment.yaml` | Main deployment |
-| `apps/hermes/secret.enc.yaml` | SOPS-encrypted credentials |
+| `config/hermes/secret.enc.yaml` | SOPS-encrypted credentials |
 | `scripts/deploy-hermes.sh` | Deployment script |
 | `scripts/hermes.sh` | TUI access script |
 

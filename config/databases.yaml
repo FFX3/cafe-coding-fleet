@@ -1,0 +1,31 @@
+# Database configuration for centralized PostgreSQL management
+# Used by scripts/internal/setup-databases.sh
+
+# Regex pattern to match database URL in sops-encrypted secret files
+# Matches: DATABASE_URL, PG_DATABASE_URL, DATASOURCES_DEFAULT_URL
+url_pattern: "(PG_)?DATABASE_URL|DATASOURCES_DEFAULT_URL"
+
+# Databases to create
+# Each entry will:
+#   1. Look for secret.enc.yaml in config_path
+#   2. Extract credentials from the URL matching url_pattern
+#   3. Create database and user if they don't exist
+#   4. Grant appropriate permissions
+databases:
+  - name: gotrue
+    config_path: config/platform-services
+    # GoTrue uses a schema, not a separate database
+    schema: auth
+
+  - name: hermes
+    config_path: config/hermes
+
+  - name: twenty
+    config_path: config/twenty
+
+  - name: webstudio
+    config_path: config/webstudio
+    postgrest: true  # Generate PostgREST secret in platform-services
+
+  - name: passbolt
+    config_path: config/passbolt

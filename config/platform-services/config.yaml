@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gotrue-config
+  namespace: platform-services
+data:
+  # Core
+  GOTRUE_DB_DRIVER: postgres
+  GOTRUE_API_HOST: 0.0.0.0
+  GOTRUE_API_PORT: "9999"
+
+  # URLs
+  API_EXTERNAL_URL: https://auth.${DOMAIN}
+  GOTRUE_SITE_URL: https://studio.${DOMAIN}
+  GOTRUE_URI_ALLOW_LIST: https://hermes.${DOMAIN}/**,https://studio.${DOMAIN}/**,https://crm.${DOMAIN}/**,https://webstudio.${DOMAIN}/**
+
+  # JWT config
+  GOTRUE_JWT_EXP: "3600"
+  GOTRUE_JWT_AUD: authenticated
+  GOTRUE_JWT_ADMIN_ROLES: service_role
+  GOTRUE_JWT_ISSUER: https://auth.${DOMAIN}
+
+  # OAuth 2.1 / OIDC provider mode
+  GOTRUE_OAUTH_SERVER_ENABLED: "true"
+  GOTRUE_OAUTH_SERVER_AUTHORIZATION_PATH: /oauth/consent
+
+  # Auth methods - disable public signup, only deploy script creates users via admin API
+  GOTRUE_DISABLE_SIGNUP: "true"
+  GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+  GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+  GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+
+  # Disable email confirmation for now (no SMTP)
+  GOTRUE_MAILER_AUTOCONFIRM: "true"
+
+  # Security
+  GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED: "true"
+  GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
