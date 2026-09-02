@@ -7,18 +7,20 @@ CERTS_DIR="$ROOT_DIR/certs"
 
 mkdir -p "$CERTS_DIR"
 
-# List of certificate secrets to export (format: "namespace:secret" or just "secret" for default namespace)
-CERT_SECRETS=("default:test-app-tls" "default:test-app-2-tls" "twenty:twenty-tls" "conduit:conduit-tls" "gotrue:gotrue-tls" "hermes:hermes-tls" "studio:studio-tls")
+# Auto-discover all certificates across all namespaces
+echo "Discovering certificates..."
+CERT_LIST=$(kubectl get certificates --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}:{.metadata.name}{"\n"}{end}' 2>/dev/null || echo "")
 
-for entry in "${CERT_SECRETS[@]}"; do
-    # Parse namespace and secret name
-    if [[ "$entry" == *":"* ]]; then
-        namespace="${entry%%:*}"
-        secret="${entry#*:}"
-    else
-        namespace="default"
-        secret="$entry"
-    fi
+if [[ -z "$CERT_LIST" ]]; then
+    echo "No certificates found in the cluster"
+    exit 0
+fi
+
+while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+
+    namespace="${entry%%:*}"
+    secret="${entry#*:}"
 
     echo "Exporting $secret from namespace $namespace..."
 
@@ -40,7 +42,7 @@ for entry in "${CERT_SECRETS[@]}"; do
     sops --encrypt --in-place "$CERTS_DIR/$secret.enc.yaml"
 
     echo "  Saved to certs/$secret.enc.yaml"
-done
+done <<< "$CERT_LIST"
 
 echo ""
 echo "Done! Commit the certs/*.enc.yaml files to your repo."

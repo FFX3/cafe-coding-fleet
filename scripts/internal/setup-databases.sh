@@ -47,7 +47,8 @@ for ((i=0; i<DB_COUNT; i++)); do
     }
 
     # Find line matching the URL pattern and extract the URL
-    DB_URL=$(echo "$DECRYPTED" | grep -E "$URL_PATTERN" | head -1 | sed 's/.*: *//' | tr -d '"' | tr -d "'")
+    # Extract value after first colon (non-greedy)
+    DB_URL=$(echo "$DECRYPTED" | grep -E "$URL_PATTERN" | head -1 | sed 's/^[^:]*: *//' | tr -d '"' | tr -d "'")
 
     if [[ -z "$DB_URL" ]]; then
         echo "    Warning: No DATABASE_URL found matching pattern '$URL_PATTERN'"
@@ -106,10 +107,37 @@ for ((i=0; i<DB_COUNT; i++)); do
     # Generate PostgREST secret if enabled for this database
     POSTGREST_ENABLED=$(yq ".databases[$i].postgrest // false" "$CONFIG_FILE")
     if [[ "$POSTGREST_ENABLED" == "true" ]]; then
-        echo "    Generating PostgREST secret: gen-postgrest-$DB_NAME-credentials"
+        echo "    Configuring PostgREST for $DB_NAME..."
+
+        # Create PostgREST roles if they don't exist (cluster-wide, idempotent)
+        kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c \
+            "DO \$\$ BEGIN
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+                    CREATE ROLE anon NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+                    CREATE ROLE authenticated NOLOGIN;
+                END IF;
+            END \$\$;" &>/dev/null
+
+        # Grant roles to the database user (so PostgREST can switch to them)
+        kubectl exec -n postgres statefulset/postgres -- psql -U postgres -c \
+            "GRANT anon, authenticated TO $USER" &>/dev/null
+
+        # Grant schema access to PostgREST roles
+        kubectl exec -n postgres statefulset/postgres -- psql -U postgres -d "$DB_NAME" -c \
+            "GRANT USAGE ON SCHEMA public TO anon, authenticated;
+             GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+             GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated;
+             ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO authenticated;" &>/dev/null
+
+        echo "    Configured PostgREST roles (anon, authenticated)"
 
         # Build the internal DATABASE_URL (pointing to postgres service in postgres namespace)
         INTERNAL_DB_URL="postgres://$USER:$PASSWORD@postgres.postgres.svc.cluster.local:5432/$DB_NAME"
+
+        echo "    Generating PostgREST secret: gen-postgrest-$DB_NAME-credentials"
 
         # Create/update the secret in platform-services namespace
         kubectl apply -f - <<EOF

@@ -6,11 +6,12 @@ metadata:
 data:
   # URLs
   DEPLOYMENT_URL: https://webstudio.${DOMAIN}
+  DEPLOYMENT_ENVIRONMENT: production
   APP_FQDN: webstudio.${DOMAIN}
   SELF_HOSTED_PUBLISHER_URL: http://webstudio-publisher.webstudio.svc.cluster.local:4000
 
-  # PostgREST API (in platform-services namespace)
-  POSTGREST_URL: https://api.${DOMAIN}/webstudio
+  # PostgREST API (external URL with TLS)
+  POSTGREST_URL: https://api.justinmcintyre.com/webstudio
 
   # S3/MinIO storage (internal)
   S3_ENDPOINT: http://minio.webstudio.svc.cluster.local:9000
@@ -22,6 +23,6 @@ data:
   USER_PLAN: Pro
   MAX_ASSETS_PER_PROJECT: "50"
 
-  # Auth - use dev login for simplicity
-  DEV_LOGIN: "true"
-  DEV_LOGIN_EMAIL: admin@${DOMAIN}
+  # Auth - OIDC via GoTrue
+  OIDC_ISSUER_URL: https://auth.${DOMAIN}
+  OIDC_PROVIDER_NAME: Studio

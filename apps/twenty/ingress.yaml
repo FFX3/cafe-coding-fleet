@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - crm.${DOMAIN}
-      secretName: twenty-tls
+      secretName: crm-tls
   rules:
     - host: crm.${DOMAIN}
       http:

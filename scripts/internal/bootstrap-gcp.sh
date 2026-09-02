@@ -155,7 +155,9 @@ restore_certificates() {
     echo ""
     echo "Restoring stored certificates..."
 
-    local SUBDOMAIN_COUNT=$(yq '.subdomains | length' "$CONFIG_FILE")
+    local SUBDOMAIN_COUNT
+    SUBDOMAIN_COUNT=$(yq '.subdomains | length' "$CONFIG_FILE")
+    echo "  Found $SUBDOMAIN_COUNT subdomains"
     local RESTORED=0
     local SKIPPED=0
 
@@ -168,10 +170,17 @@ restore_certificates() {
 
         if [[ -f "$CERT_FILE" ]]; then
             echo "  Restoring $SECRET_NAME -> $NAMESPACE"
-            sops --decrypt "$CERT_FILE" | kubectl apply -n "$NAMESPACE" -f -
-            ((RESTORED++))
+            # Override metadata to match subdomain (backup may have old names)
+            if sops --decrypt "$CERT_FILE" | \
+                yq ".metadata.name = \"$SECRET_NAME\" | .metadata.namespace = \"$NAMESPACE\"" | \
+                kubectl apply -f - 2>/dev/null; then
+                ((RESTORED++)) || true
+            else
+                echo "    Warning: Failed to restore $SECRET_NAME"
+                ((SKIPPED++)) || true
+            fi
         else
-            ((SKIPPED++))
+            ((SKIPPED++)) || true
         fi
     done
 

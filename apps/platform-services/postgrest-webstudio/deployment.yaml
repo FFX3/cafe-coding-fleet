@@ -32,17 +32,16 @@ spec:
             - name: PGRST_DB_SCHEMAS
               value: "public"
             - name: PGRST_DB_ANON_ROLE
-              value: "webstudio"
-            # JWT secret shared with GoTrue for token validation
+              value: "anon"
+            # JWT verification using GoTrue's public key (RS256)
             - name: PGRST_JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: gotrue-credentials
-                  key: GOTRUE_JWT_SECRET
+              value: '{"alg":"RS256","e":"AQAB","key_ops":["verify"],"kid":"auth-signing-key","kty":"RSA","n":"0bRBPr--McvssCV33_rAOZw1Fo7q_72h_kbB7NjKtP5k8xeDgvTVtRSx8_f8WDDNmWv3pZk3ncadAK8INcXHQQlruwtJZq_OEtazrnrmB-k24p2rIMj8n_VUc1vVrrYIOhZLslxLfTwuKOLZYzbDudETThu2htVI87VF1Eo9ZeHBdbME6B4YjUGnYgCDfn8pMCaQ8wtz9ZiwcOAN74yfJu2BfiMAnpwsHe6T5KNRugmGTZkPcJ-xFBKzmBaw9G0VM9hKh1JvUzCGoWhgzcX8XhD_YaqzebbAsxe_CYReRiT8q5IZNGVJ3Xl1CDZjVrhmEqcsW-WMhnWtA0V_1PxO-Q","use":"sig"}'
             - name: PGRST_JWT_AUD
               value: "authenticated"
             - name: PGRST_OPENAPI_SERVER_PROXY_URI
               value: "https://api.${DOMAIN}/webstudio"
+            - name: PGRST_LOG_LEVEL
+              value: "info"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

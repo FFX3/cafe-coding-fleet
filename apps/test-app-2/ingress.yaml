@@ -11,7 +11,7 @@ spec:
   tls:
     - hosts:
         - test2.${DOMAIN}
-      secretName: test-app-2-tls
+      secretName: test2-tls
   rules:
     - host: test2.${DOMAIN}
       http:

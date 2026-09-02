@@ -13,7 +13,7 @@ spec:
   tls:
     - hosts:
         - matrix.${DOMAIN}
-      secretName: conduit-tls
+      secretName: matrix-tls
   rules:
     - host: matrix.${DOMAIN}
       http:

@@ -13,32 +13,26 @@ spec:
       labels:
         app: webstudio-builder
     spec:
+      imagePullSecrets:
+        - name: gcr-credentials
       securityContext:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
-      initContainers:
-        # Run Prisma migrations before starting the app
-        - name: migrate
-          image: ghcr.io/webstudio-community/builder:latest
-          command: ["npx", "prisma", "migrate", "deploy"]
-          envFrom:
-            - configMapRef:
-                name: webstudio-config
-            - secretRef:
-                name: webstudio-credentials
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
       containers:
         - name: builder
-          image: ghcr.io/webstudio-community/builder:latest
+          image: webstudio-builder:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 3000
+          env:
+            - name: DIRECT_URL
+              value: $(DATABASE_URL)
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: webstudio-credentials
+                  key: WEBSTUDIO_OIDC_CLIENT_ID
           envFrom:
             - configMapRef:
                 name: webstudio-config
@@ -59,14 +53,12 @@ spec:
               memory: "1Gi"
               cpu: "1000m"
           livenessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 3000
             initialDelaySeconds: 30
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 10

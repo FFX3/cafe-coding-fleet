@@ -1,0 +1,3 @@
+[submodule "forks/webstudio"]
+	path = forks/webstudio
+	url = git@github.com:FFX3/webstudio.git

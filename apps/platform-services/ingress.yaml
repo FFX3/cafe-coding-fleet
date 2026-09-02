@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - auth.${DOMAIN}
-      secretName: gotrue-tls
+      secretName: auth-tls
   rules:
     - host: auth.${DOMAIN}
       http:
