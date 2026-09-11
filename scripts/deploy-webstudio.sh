@@ -22,10 +22,10 @@ if [[ -z "$REGISTRY" ]]; then
     exit 1
 fi
 
-IMAGE_NAME="webstudio-builder"
 WEBSTUDIO_SRC="$ROOT_DIR/forks/webstudio"
 IMAGE_TAG=$(cd "$WEBSTUDIO_SRC" && git rev-parse --short HEAD)
-FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+BUILDER_IMAGE="${REGISTRY}/webstudio-builder:${IMAGE_TAG}"
+PUBLISHER_IMAGE="${REGISTRY}/webstudio-publisher:${IMAGE_TAG}"
 
 # Check dependencies
 if ! kubectl get statefulset postgres -n postgres &>/dev/null; then
@@ -115,7 +115,10 @@ kubectl run minio-setup --rm -i --restart=Never -n webstudio \
 
 # Deploy Publisher (internal service)
 echo "Deploying Publisher..."
-kubectl apply -f "$APPS_DIR/publisher/deployment.yaml"
+cat "$APPS_DIR/publisher/deployment.yaml" | \
+    sed "s|image: webstudio-publisher:latest|image: $PUBLISHER_IMAGE|g" | \
+    sed 's|imagePullPolicy: Never|imagePullPolicy: Always|g' | \
+    kubectl apply -f -
 kubectl apply -f "$APPS_DIR/publisher/service.yaml"
 kubectl rollout status deployment/webstudio-publisher -n webstudio --timeout=120s
 
@@ -135,7 +138,7 @@ kubectl create secret docker-registry gcr-credentials \
 # Deploy Builder with actual image
 echo "Deploying Builder..."
 cat "$APPS_DIR/builder/deployment.yaml" | \
-    sed "s|image: webstudio-builder:latest|image: $FULL_IMAGE|g" | \
+    sed "s|image: webstudio-builder:latest|image: $BUILDER_IMAGE|g" | \
     sed 's|imagePullPolicy: Never|imagePullPolicy: Always|g' | \
     kubectl apply -f -
 kubectl apply -f "$APPS_DIR/builder/service.yaml"

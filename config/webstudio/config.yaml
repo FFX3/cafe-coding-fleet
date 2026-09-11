@@ -9,8 +9,8 @@ data:
   DEPLOYMENT_ENVIRONMENT: production
   APP_FQDN: webstudio.${DOMAIN}
 
-  # TRPC deployment service (Cloudflare publisher)
-  TRPC_SERVER_URL: http://cloudflare-publisher.webstudio.svc.cluster.local:4000/trpc
+  # TRPC deployment service (publisher)
+  TRPC_SERVER_URL: http://webstudio-publisher.webstudio.svc.cluster.local:4000/trpc
 
   # PostgREST API (external URL with TLS)
   POSTGREST_URL: https://api.justinmcintyre.com/webstudio

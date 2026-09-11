@@ -18,20 +18,30 @@ if [[ -z "$REGISTRY" ]]; then
     exit 1
 fi
 
-IMAGE_NAME="webstudio-builder"
 IMAGE_TAG=$(cd "$WEBSTUDIO_SRC" && git rev-parse --short HEAD)
-FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 # Configure docker to authenticate with GCP Artifact Registry
 echo "Configuring Docker authentication for Artifact Registry..."
 gcloud auth configure-docker "${REGISTRY%%/*}" --quiet
 
 # Build the webstudio-builder image
-echo "Building Webstudio builder image from fork..."
-docker build -f "$WEBSTUDIO_SRC/Dockerfile.builder" -t "$FULL_IMAGE" "$WEBSTUDIO_SRC"
+BUILDER_IMAGE="${REGISTRY}/webstudio-builder:${IMAGE_TAG}"
+echo "Building Webstudio builder image..."
+docker build -f "$WEBSTUDIO_SRC/Dockerfile.builder" -t "$BUILDER_IMAGE" "$WEBSTUDIO_SRC"
 
 echo "Pushing image to Artifact Registry..."
-docker push "$FULL_IMAGE"
+docker push "$BUILDER_IMAGE"
+echo "Built and pushed: $BUILDER_IMAGE"
+
+# Build the cloudflare-publisher image
+PUBLISHER_IMAGE="${REGISTRY}/webstudio-publisher:${IMAGE_TAG}"
+echo ""
+echo "Building Webstudio publisher image..."
+docker build -f "$WEBSTUDIO_SRC/Dockerfile.publisher" -t "$PUBLISHER_IMAGE" "$WEBSTUDIO_SRC"
+
+echo "Pushing image to Artifact Registry..."
+docker push "$PUBLISHER_IMAGE"
+echo "Built and pushed: $PUBLISHER_IMAGE"
 
 echo ""
-echo "Built and pushed: $FULL_IMAGE"
+echo "All images built and pushed."

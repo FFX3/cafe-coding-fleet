@@ -13,13 +13,16 @@ spec:
       labels:
         app: webstudio-publisher
     spec:
+      imagePullSecrets:
+        - name: gcr-credentials
       securityContext:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: publisher
-          image: ghcr.io/webstudio-community/webstudio-publisher:latest
+          image: webstudio-publisher:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 4000
           envFrom:
@@ -36,20 +39,24 @@ spec:
               drop: ["ALL"]
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "50m"
-            limits:
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
           livenessProbe:
             httpGet:
               path: /health
               port: 4000
             initialDelaySeconds: 10
             periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 20
           readinessProbe:
             httpGet:
               path: /health
               port: 4000
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
