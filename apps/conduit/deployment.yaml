@@ -29,7 +29,7 @@ spec:
               mountPath: /var/lib/matrix-conduit
       containers:
         - name: conduit
-          image: docker.io/matrixconduit/matrix-conduit:latest
+          image: docker.io/matrixconduit/matrix-conduit:v0.10.13
           ports:
             - containerPort: 6167
           envFrom:

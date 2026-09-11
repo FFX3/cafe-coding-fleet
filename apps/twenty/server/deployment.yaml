@@ -29,7 +29,9 @@ spec:
               mountPath: /app/packages/twenty-server/.local-storage
       containers:
         - name: twenty-server
-          image: twentycrm/twenty:latest
+          # TODO: Pin to stable version once template string bug is fixed
+          # https://github.com/twentyhq/twenty/releases
+          image: twentycrm/twenty:v2.39.0
           command: ["sh", "-c", "yarn database:init:prod && yarn start:prod"]
           ports:
             - containerPort: 3000

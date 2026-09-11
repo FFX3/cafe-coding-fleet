@@ -122,106 +122,14 @@ if [[ "$CLUSTER_RUNNING" == "false" ]]; then
     fi
 fi
 
-# Deploy infrastructure components
 echo ""
-"$ROOT_DIR/scripts/deploy-ingress.sh"
-
+echo "Kubernetes cluster is ready!"
 echo ""
-"$ROOT_DIR/scripts/deploy-cert-manager.sh"
-
-# Create namespaces that will hold TLS certificates (before restoring certs)
-echo ""
-echo "Creating application namespaces..."
-kubectl apply -f "$ROOT_DIR/apps/postgres/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/platform-services/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/twenty/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/conduit/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/hermes/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/studio/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/passbolt/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/apps/webstudio/namespace.yaml"
-
-# Restore certificates if available (before deploying apps that create ingresses)
-# Reads from config/domains.yaml for consistency with backup-certs.sh
-restore_certificates() {
-    local CERTS_DIR="$ROOT_DIR/certs"
-    local CONFIG_FILE="$ROOT_DIR/config/domains.yaml"
-
-    if [[ ! -f "$CONFIG_FILE" ]]; then
-        echo "Warning: $CONFIG_FILE not found, skipping certificate restore"
-        return 0
-    fi
-
-    echo ""
-    echo "Restoring stored certificates..."
-
-    local SUBDOMAIN_COUNT
-    SUBDOMAIN_COUNT=$(yq '.subdomains | length' "$CONFIG_FILE")
-    echo "  Found $SUBDOMAIN_COUNT subdomains"
-    local RESTORED=0
-    local SKIPPED=0
-
-    for ((i=0; i<SUBDOMAIN_COUNT; i++)); do
-        local NAME=$(yq ".subdomains[$i].name" "$CONFIG_FILE")
-        local NAMESPACE=$(yq ".subdomains[$i].namespace // \"default\"" "$CONFIG_FILE")
-
-        local SECRET_NAME="${NAME}-tls"
-        local CERT_FILE="$CERTS_DIR/${SECRET_NAME}.enc.yaml"
-
-        if [[ -f "$CERT_FILE" ]]; then
-            echo "  Restoring $SECRET_NAME -> $NAMESPACE"
-            # Override metadata to match subdomain (backup may have old names)
-            if sops --decrypt "$CERT_FILE" | \
-                yq ".metadata.name = \"$SECRET_NAME\" | .metadata.namespace = \"$NAMESPACE\"" | \
-                kubectl apply -f - 2>/dev/null; then
-                ((RESTORED++)) || true
-            else
-                echo "    Warning: Failed to restore $SECRET_NAME"
-                ((SKIPPED++)) || true
-            fi
-        else
-            ((SKIPPED++)) || true
-        fi
-    done
-
-    if [[ $RESTORED -gt 0 ]]; then
-        CERTS_RESTORED=true
-        echo "Certificates restored: $RESTORED restored, $SKIPPED missing (will be requested from Let's Encrypt)"
-    else
-        echo "No stored certificates found, new ones will be requested from Let's Encrypt"
-    fi
-    echo ""
-}
-
-restore_certificates
-
-# Deploy applications
-echo ""
-"$ROOT_DIR/scripts/deploy-apps.sh"
-
-echo "Waiting for ingress routes to propagate..."
-sleep 3
-
-echo ""
-echo "Cluster is ready!"
-echo ""
-echo "Test the ingress:"
-echo "  curl http://test.justinmcintyre.com"
-echo "  curl http://test2.justinmcintyre.com"
-echo ""
-echo "Test HTTPS (after certificates are issued):"
-echo "  curl https://test.justinmcintyre.com"
-echo "  curl https://test2.justinmcintyre.com"
-echo "  curl https://matrix.justinmcintyre.com/_matrix/client/versions"
-echo ""
-echo "Check certificate status:"
-echo "  kubectl get certificate -A"
+echo "Next steps:"
+echo "  nix run .#cluster-deploy    # Deploy all services"
+echo "  nix run .#cluster-status    # Check service status"
 echo ""
 echo "Useful commands:"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig health"
 echo "  talosctl --nodes $IP --talosconfig $TALOS_DIR/talosconfig dashboard"
-echo "  kubectl get pods -A"
-
-# Start monitoring (pass CERTS_RESTORED to the monitoring script)
-export CERTS_RESTORED
-exec "$ROOT_DIR/scripts/monitor-status.sh"
+echo "  kubectl get nodes"

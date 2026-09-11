@@ -12,7 +12,7 @@ data:
   # URLs
   API_EXTERNAL_URL: https://auth.${DOMAIN}
   GOTRUE_SITE_URL: https://studio.${DOMAIN}
-  GOTRUE_URI_ALLOW_LIST: https://hermes.${DOMAIN}/**,https://studio.${DOMAIN}/**,https://crm.${DOMAIN}/**,https://webstudio.${DOMAIN}/**
+  GOTRUE_URI_ALLOW_LIST: https://hermes.${DOMAIN}/**,https://studio.${DOMAIN}/**,https://crm.${DOMAIN}/**,https://webstudio.${DOMAIN}/**,https://*.webstudio.${DOMAIN}/**
 
   # JWT config
   GOTRUE_JWT_EXP: "3600"

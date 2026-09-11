@@ -46,7 +46,7 @@ fi
 # Register Webstudio as OAuth client in GoTrue
 WEBSTUDIO_SECRET_YAML=$(sops --decrypt "$CONFIG_DIR/secret.enc.yaml")
 WEBSTUDIO_CLIENT_ID=$(echo "$WEBSTUDIO_SECRET_YAML" | grep WEBSTUDIO_OIDC_CLIENT_ID | sed 's/.*WEBSTUDIO_OIDC_CLIENT_ID:\s*//' | tr -d '"' | xargs)
-WEBSTUDIO_REDIRECT_URI="https://webstudio.$DOMAIN/auth/oidc/callback"
+WEBSTUDIO_REDIRECT_URI="https://webstudio.$DOMAIN/auth/oidc/callback,https://*.webstudio.$DOMAIN/auth/ws/callback"
 
 if [[ -z "$WEBSTUDIO_CLIENT_ID" ]]; then
     echo "Warning: WEBSTUDIO_OIDC_CLIENT_ID not found in secret, skipping OAuth registration"

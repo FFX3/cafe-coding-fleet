@@ -29,7 +29,7 @@ spec:
               mountPath: /var/lib/passbolt
       containers:
         - name: passbolt
-          image: passbolt/passbolt:latest-ce
+          image: passbolt/passbolt:5.15.0-1-ce
           ports:
             - containerPort: 443
               name: https

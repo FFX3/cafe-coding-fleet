@@ -4,15 +4,26 @@ metadata:
   name: webstudio
   namespace: webstudio
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-dns"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - webstudio.${DOMAIN}
+        - "*.webstudio.${DOMAIN}"
       secretName: webstudio-tls
   rules:
     - host: webstudio.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webstudio-builder
+                port:
+                  number: 3000
+    - host: "*.webstudio.${DOMAIN}"
       http:
         paths:
           - path: /

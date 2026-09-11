@@ -18,7 +18,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: postfix
-          image: boky/postfix:latest
+          image: boky/postfix:v5.1.0
           ports:
             - containerPort: 587
               name: smtp

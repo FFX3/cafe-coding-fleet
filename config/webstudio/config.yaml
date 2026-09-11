@@ -23,6 +23,31 @@ data:
   USER_PLAN: Pro
   MAX_ASSETS_PER_PROJECT: "50"
 
+  # Plan definitions - Pro plan unlocks all features for self-hosted
+  PLANS: |
+    [
+      {
+        "name": "Pro",
+        "features": {
+          "canDownloadAssets": true,
+          "canRestoreBackups": true,
+          "allowAdditionalPermissions": true,
+          "allowDynamicData": true,
+          "allowAuth": true,
+          "allowContentMode": true,
+          "allowStagingPublish": true,
+          "maxContactEmailsPerProject": 100,
+          "maxDomainsAllowedPerUser": 100,
+          "maxDailyPublishesPerUser": 1000,
+          "maxWorkspaces": 100,
+          "maxProjectsAllowedPerUser": 1000,
+          "maxAssetsPerProject": 1000,
+          "seatsIncluded": 100,
+          "maxSeatsPerWorkspace": 100
+        }
+      }
+    ]
+
   # Auth - OIDC via GoTrue
   OIDC_ISSUER_URL: https://auth.${DOMAIN}
   OIDC_PROVIDER_NAME: Studio

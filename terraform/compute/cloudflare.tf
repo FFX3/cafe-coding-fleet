@@ -12,3 +12,13 @@ resource "cloudflare_record" "services" {
   ttl     = 60
   proxied = false
 }
+
+# Wildcard DNS for webstudio project previews (*.webstudio.domain.com)
+resource "cloudflare_record" "webstudio_wildcard" {
+  zone_id = data.sops_file.secrets.data["cloudflare_zone_id"]
+  name    = "*.webstudio"
+  content = google_compute_instance.talos_controlplane.network_interface[0].access_config[0].nat_ip
+  type    = "A"
+  ttl     = 60
+  proxied = false
+}

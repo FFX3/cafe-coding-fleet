@@ -19,7 +19,9 @@ spec:
           type: RuntimeDefault
       containers:
         - name: twenty-worker
-          image: twentycrm/twenty:latest
+          # TODO: Pin to stable version once template string bug is fixed
+          # https://github.com/twentyhq/twenty/releases
+          image: twentycrm/twenty:v2.39.0
           command: ["yarn", "worker:prod"]
           envFrom:
             - configMapRef:
