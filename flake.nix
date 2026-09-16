@@ -51,7 +51,7 @@
           };
 
           command-center = {
-            enable = false;
+            enable = true;
             namespace = "command-center";
             manifests = "command-center";
             dependsOn = [ "ingress" ];

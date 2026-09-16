@@ -19,8 +19,6 @@ spec:
           type: RuntimeDefault
       containers:
         - name: twenty-worker
-          # TODO: Pin to stable version once template string bug is fixed
-          # https://github.com/twentyhq/twenty/releases
           image: twentycrm/twenty:v2.39.0
           command: ["yarn", "worker:prod"]
           envFrom:
@@ -29,8 +27,12 @@ spec:
             - secretRef:
                 name: twenty-credentials
           env:
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=768"
             - name: DISABLE_DB_MIGRATIONS
               value: "true"
+            - name: LOGIC_FUNCTION_TYPE
+              value: "LOCAL"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

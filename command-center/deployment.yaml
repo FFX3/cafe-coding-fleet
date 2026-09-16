@@ -74,6 +74,8 @@ spec:
               mountPath: /command-center/postgres
             - name: twenty
               mountPath: /command-center/twenty
+            - name: twenty-redis
+              mountPath: /command-center/twenty-redis
           resources:
             requests:
               memory: "128Mi"
@@ -103,4 +105,8 @@ spec:
         - name: twenty
           hostPath:
             path: /var/mnt/data/twenty
+            type: DirectoryOrCreate
+        - name: twenty-redis
+          hostPath:
+            path: /var/mnt/data/twenty-redis
             type: DirectoryOrCreate
