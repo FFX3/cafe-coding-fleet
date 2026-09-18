@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Deck</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #f5f5f5;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .slide {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 8vh 10vw;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 3rem;
+      line-height: 1.2;
+    }
+
+    .pain {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .pain-item {
+      background: #171717;
+      border-left: 3px solid #ef4444;
+      padding: 1.5rem 2rem;
+      font-size: 1.4rem;
+      color: #a3a3a3;
+    }
+
+    .arrow {
+      font-size: 3rem;
+      color: #525252;
+      margin: 2rem 0;
+    }
+
+    .solution {
+      font-size: 2rem;
+      color: #22c55e;
+    }
+
+    .solution span {
+      color: #f5f5f5;
+    }
+
+    .progress {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      font-size: 1rem;
+      color: #525252;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slide 1: Hook -->
+  <div class="slide active">
+    <h1>Processes don't get better<br>unless you're in the room.</h1>
+  </div>
+
+  <!-- Slide 2 -->
+  <div class="slide">
+    <p style="font-size: 1.5rem; color: #525252; margin-bottom: 1rem;">Maybe...</p>
+    <h1>You're the only one who can take vendor meetings</h1>
+    <div class="pain">
+      <div class="pain-item">They need your login to make changes</div>
+      <div class="pain-item">They call to verify employee requests</div>
+      <div class="pain-item">Only you can grant permissions</div>
+    </div>
+    <p style="font-size: 1.2rem; color: #525252; margin-top: 1rem;">So changes happen on their timeline. Employees wait. You're in meetings instead of with clients.</p>
+  </div>
+
+  <!-- Slide 3 -->
+  <div class="slide">
+    <p style="font-size: 1.5rem; color: #525252; margin-bottom: 1rem;">Maybe...</p>
+    <h1>Your SOPs live in your head</h1>
+    <div class="pain">
+      <div class="pain-item">Only you know the full cycle - prospect to delivery</div>
+      <div class="pain-item">Training means shadowing you</div>
+      <div class="pain-item">Nothing's written down</div>
+    </div>
+    <p style="font-size: 1.2rem; color: #525252; margin-top: 1rem;">So you can't take a real vacation. If you're sick, things stop. Output varies when you're not watching.</p>
+  </div>
+
+  <!-- Slide 4 -->
+  <div class="slide">
+    <p style="font-size: 1.5rem; color: #525252; margin-bottom: 1rem;">Maybe...</p>
+    <h1>Your team works around problems</h1>
+    <div class="pain">
+      <div class="pain-item">Band-aids that add complexity</div>
+      <div class="pain-item">"That's just how it is"</div>
+      <div class="pain-item">Nobody has access to fix it</div>
+    </div>
+    <p style="font-size: 1.2rem; color: #525252; margin-top: 1rem;">So small problems become big ones. Things break at the worst time. Harder to bring on new people.</p>
+  </div>
+
+  <!-- Slide 6 -->
+  <div class="slide">
+    <p style="font-size: 1.5rem; color: #525252; margin-bottom: 1rem;">Maybe...</p>
+    <h1>New hires can't figure out "how we do things"</h1>
+    <div class="pain">
+      <div class="pain-item">Long onboarding, still confused</div>
+      <div class="pain-item">Questions constantly</div>
+      <div class="pain-item">No big picture, so they stick to the bare minimum</div>
+    </div>
+    <p style="font-size: 1.2rem; color: #525252; margin-top: 1rem;">So your time goes to answering questions. Mistakes cost money. Takes months to get value from new hires.</p>
+  </div>
+
+  <!-- Slide 7 -->
+  <div class="slide">
+    <p style="font-size: 1.5rem; color: #525252; margin-bottom: 1rem;">Maybe...</p>
+    <h1>Improvements wait until you have time</h1>
+    <div class="pain">
+      <div class="pain-item">A list of things to "get to eventually"</div>
+      <div class="pain-item">Backlog that never moves</div>
+      <div class="pain-item">Ideas die in your inbox</div>
+    </div>
+    <p style="font-size: 1.2rem; color: #525252; margin-top: 1rem;">So progress slows down. Team frustration builds. Good people start looking elsewhere.</p>
+  </div>
+
+  <!-- Slide 8: Resonate -->
+  <div class="slide">
+    <p style="font-size: 2rem; color: #a3a3a3;">Does that resonate with your company or something you might be experiencing?</p>
+  </div>
+
+  <div class="progress">
+    <span id="current">1</span> / <span id="total">1</span>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    let current = 0;
+
+    function showSlide(index) {
+      slides.forEach(s => s.classList.remove('active'));
+      slides[index].classList.add('active');
+      document.getElementById('current').textContent = index + 1;
+    }
+
+    function next() {
+      if (current < slides.length - 1) {
+        current++;
+        showSlide(current);
+      }
+    }
+
+    function prev() {
+      if (current > 0) {
+        current--;
+        showSlide(current);
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const x = e.clientX;
+      const width = window.innerWidth;
+      if (x > width / 2) {
+        next();
+      } else {
+        prev();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') next();
+      if (e.key === 'ArrowLeft') prev();
+    });
+
+    document.getElementById('total').textContent = slides.length;
+  </script>
+
+</body>
+</html>

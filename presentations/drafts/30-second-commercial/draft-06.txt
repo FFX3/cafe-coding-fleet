@@ -1,0 +1,31 @@
+30 SECOND COMMERCIAL - DRAFT 06
+
+---
+
+"Well, you know how a lot of business owners get frustrated with getting pulled in to approve tech stuff - a 2FA code, a vendor calling to verify a request, employees waiting on you before they can move forward?
+
+Well, what I do is help companies like that with their marketing, their sales pipeline, and onboarding new hires.
+
+Does that resonate with your company or something you might be experiencing?"
+
+---
+
+ICP CONTEXT (not part of script):
+- Not necessarily tech savvy - that's the point
+- High revenue, low headcount
+- They're the blocker, not by choice
+- Tech permission bottleneck: 2FA, vendor verification calls
+- Time best spent with clients
+
+KEY INSIGHT:
+- I'm not just a tech guy - I fix tech pain to help with business outcomes
+- Tech is supposed to solve marketing, sales, onboarding problems
+- But mismanagement makes those problems worse
+- Example: single CRM seat shared across team → can't do performance reviews, can't track individual work
+- They're using enterprise-priced tools to solve small headcount problems
+- My solution: OSS tools on their infra, unlimited seats, right-sized for small teams
+
+NOTES:
+- "help with X, X, and X" = business outcomes, NOT the tech
+- Marketing, sales pipeline, onboarding - the things tech is supposed to enable
+- Solution comes later in the conversation

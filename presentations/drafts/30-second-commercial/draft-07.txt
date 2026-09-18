@@ -1,0 +1,27 @@
+30 SECOND COMMERCIAL - DRAFT 07
+
+---
+
+"Well, you know how a lot of companies get frustrated with their key holders getting pulled in to approve tech stuff - a 2FA code, a vendor calling to verify a request, waiting in support queues when you have a problem today?
+
+Well, what I do is help companies like that with their marketing, their sales pipeline, and onboarding new hires.
+
+Does that resonate with your company or something you might be experiencing?"
+
+---
+
+ICP CONTEXT (not part of script):
+- Key holders = most expensive, most capable employees
+- They're the ones managing keys instead of doing valuable work
+- Or the owner is the sole key holder - even worse
+- Small businesses don't know how to manage the keys yet
+- Support queues: you have a problem TODAY, you have to wait
+- High revenue, low headcount
+
+KEY INSIGHT:
+- I'm not just a tech guy - I fix tech pain to help with business outcomes
+- Tech is supposed to solve marketing, sales, onboarding problems
+- But mismanagement makes those problems worse
+- Example: single CRM seat shared across team → can't do performance reviews
+- They're using enterprise-priced tools to solve small headcount problems
+- My solution: OSS tools on their infra, unlimited seats, right-sized for small teams

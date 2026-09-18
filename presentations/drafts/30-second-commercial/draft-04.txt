@@ -1,0 +1,20 @@
+30 SECOND COMMERCIAL - DRAFT 04
+
+---
+
+"You know how a lot of business owners hit this point where they're trying to step back, but they keep getting pulled in to approve things?
+
+Not decisions - just tech stuff. A 2FA code. A vendor calling to verify a request. Employees waiting on you before they can move forward.
+
+What I do is help companies like that bring those systems in-house - so your team can own them, and you can get back to working with your clients.
+
+Does that sound like something you might be experiencing?"
+
+---
+
+ICP CONTEXT (not part of script):
+- Not necessarily tech savvy - that's the point
+- High revenue, low headcount
+- They're the blocker, not by choice
+- Tech permission bottleneck: 2FA, vendor verification calls
+- Time best spent with clients

@@ -1,0 +1,26 @@
+30 SECOND COMMERCIAL - DRAFT 09
+
+---
+
+"Well, you know how a lot of owners get frustrated with getting pulled in to approve tech stuff - a 2FA code, a vendor calling to verify a request, waiting in support queues when you have a problem today?
+
+Well, what I do is help companies like that with their sales pipeline, their SOPs, and onboarding new hires.
+
+Does that resonate with your company or something you might be experiencing?"
+
+---
+
+ICP CONTEXT (not part of script):
+- High revenue, low headcount
+- Key holders = most expensive, most capable employees stuck managing keys
+- Small businesses don't know how to manage the keys yet
+- Support queues: you have a problem TODAY, you have to wait
+- They're the blocker, not by choice
+
+KEY INSIGHT:
+- I'm not just a tech guy - I fix tech pain to help with business outcomes
+- Sales pipeline, SOPs, onboarding - the things tech is supposed to enable
+- But mismanagement makes those problems worse
+- Example: single CRM seat shared across team → can't do performance reviews
+- They're using enterprise-priced tools to solve small headcount problems
+- My solution: OSS tools on their infra, unlimited seats, right-sized for small teams

@@ -1,0 +1,53 @@
+30 SECOND COMMERCIAL - DRAFT 02
+
+---
+
+THE DISTILLED VERSION:
+
+"You know how a lot of business owners hit this point where they're trying to step back - delegate more, hand things off - but somehow everything still runs through them?
+
+What I do is help companies like that actually systematize - so your team can own the systems instead of waiting on you.
+
+Does that sound like something you might be experiencing?"
+
+---
+
+THEN EXPAND WITH FOLLOW-UP SLIDES:
+
+"How does that show up for you?"
+
+(Let them talk, then if needed, prompt with examples:)
+
+Slide: THE BOTTLENECK SYMPTOMS
+- Employees asking for passwords, 2FA codes
+- Training new hires is chaos - five different logins, nothing documented
+- Vendors needing YOU to log in and grant permissions
+- You're the help desk for your own company
+
+Slide: THE MARKETING SYMPTOM
+- Generic ads to generic pages because "custom is too complicated"
+- Or: different ads for different customer profiles...
+  ...but they all hit the same sales pipeline
+- Prospect gets to the call confused - the framing changed
+- You lose sales you should've closed
+
+Slide: THE FALSE SOLUTION
+- "If we just hire a few more people, it'll get better"
+- More headcount, same bottleneck
+- You're not systematized
+- You outgrew the scale where you could touch everything yourself
+
+Slide: THE REAL SOLUTION
+- Empower your team to OWN the systems
+- One place for passwords
+- One place for docs and SOPs
+- Marketing that's connected to sales
+- You step back, it keeps running
+
+---
+
+NOTES:
+- 30 second is the hook, not the full pitch
+- Let them self-identify with "how does that show up for you?"
+- Slides are for when you need to prompt or expand
+- "OWN your systems" is still the through-line

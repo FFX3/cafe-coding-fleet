@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>100 Records Shouldn't Be Hard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #f5f5f5;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .slide {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 8vh 10vw;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #e5e5e5;
+    }
+
+    p {
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: #a3a3a3;
+      max-width: 50ch;
+    }
+
+    .big-number {
+      font-size: 8rem;
+      font-weight: 700;
+      color: #f97316;
+      margin-bottom: 1rem;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      margin-top: 2rem;
+    }
+
+    .comparison-item h3 {
+      font-size: 1.5rem;
+      color: #737373;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .comparison-item .value {
+      font-size: 3.5rem;
+      font-weight: 700;
+    }
+
+    .comparison-item .value.bad {
+      color: #ef4444;
+    }
+
+    .comparison-item .value.good {
+      color: #22c55e;
+    }
+
+    ul {
+      font-size: 1.8rem;
+      line-height: 2;
+      color: #a3a3a3;
+      list-style: none;
+    }
+
+    ul li::before {
+      content: "→ ";
+      color: #f97316;
+    }
+
+    .highlight {
+      color: #f97316;
+    }
+
+    .dim {
+      color: #525252;
+    }
+
+    .center {
+      text-align: center;
+      align-items: center;
+    }
+
+    .stack-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+      font-size: 1.4rem;
+    }
+
+    .stack-item {
+      background: #171717;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      border-left: 3px solid #f97316;
+    }
+
+    .stack-item .name {
+      font-weight: 600;
+      color: #f5f5f5;
+      margin-bottom: 0.25rem;
+    }
+
+    .stack-item .desc {
+      color: #737373;
+      font-size: 1.1rem;
+    }
+
+    table {
+      font-size: 1.5rem;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+
+    th, td {
+      padding: 1rem 2rem;
+      text-align: left;
+      border-bottom: 1px solid #262626;
+    }
+
+    th {
+      color: #737373;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 1rem;
+    }
+
+    .progress {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      font-size: 1rem;
+      color: #525252;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slide 1: Title -->
+  <div class="slide active center">
+    <h1>100 Records<br>Shouldn't Be Hard</h1>
+    <p>Why "no-code" is harder than it looks, and what to do about it</p>
+  </div>
+
+  <!-- Slide 2: The Problem -->
+  <div class="slide">
+    <h2>I crashed a CRM importing 100 leads.</h2>
+    <p>Not 100,000. Not 10,000. One hundred.</p>
+    <p style="margin-top: 1rem;">My laptop could do that while running a video call.</p>
+  </div>
+
+  <!-- Slide 3: The Numbers -->
+  <div class="slide">
+    <h2>Same task. Same result.</h2>
+    <div class="comparison">
+      <div class="comparison-item">
+        <h3>Visual Workflow</h3>
+        <div class="value bad">2+ GB</div>
+        <p style="font-size: 1.2rem;">Crashed repeatedly</p>
+      </div>
+      <div class="comparison-item">
+        <h3>Coded Solution</h3>
+        <div class="value good">45 MB</div>
+        <p style="font-size: 1.2rem;">Finished instantly</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Why -->
+  <div class="slide">
+    <h2>Why does this happen?</h2>
+    <p>Visual workflow tools store state for every step.</p>
+    <p style="margin-top: 1rem;">Just in case you pause. Just in case you debug. Just in case you retry.</p>
+    <p style="margin-top: 1rem;">100 records × 5 steps × cascading workflows = <span class="highlight">100,000+ database entries</span></p>
+  </div>
+
+  <!-- Slide 5: Salesforce -->
+  <div class="slide">
+    <h2>Salesforce has the same problem.</h2>
+    <p>They just handle it differently.</p>
+    <ul style="margin-top: 2rem;">
+      <li>100 queries per transaction (then it crashes)</li>
+      <li>10 seconds CPU time (then it crashes)</li>
+      <li>150 database operations (then it crashes)</li>
+    </ul>
+  </div>
+
+  <!-- Slide 6: The Fix -->
+  <div class="slide">
+    <h2>The "fix" requires developer knowledge.</h2>
+    <ul>
+      <li>Query before the loop, not inside it</li>
+      <li>Collection variables to batch changes</li>
+      <li>Bulkification patterns</li>
+    </ul>
+    <p style="margin-top: 2rem;">That's programming. Just with boxes instead of text.</p>
+  </div>
+
+  <!-- Slide 7: Scratch -->
+  <div class="slide">
+    <h2>You've seen this before.</h2>
+    <p>MIT's Scratch teaches kids to code with visual blocks.</p>
+    <p style="margin-top: 1rem;">Variables. Loops. Conditionals. Data structures.</p>
+    <p style="margin-top: 1rem;">Nobody claims Scratch isn't programming.</p>
+    <p style="margin-top: 1rem;"><span class="highlight">Salesforce Flow is Scratch for adults.</span></p>
+  </div>
+
+  <!-- Slide 8: The Wizards -->
+  <div class="slide">
+    <h2>The "no-code wizards" are coders.</h2>
+    <p>They just don't know it.</p>
+    <p style="margin-top: 1rem;">They spent weekends learning how Zapier works.</p>
+    <p style="margin-top: 1rem;">They debugged broken workflows.</p>
+    <p style="margin-top: 1rem;">They're discounting their own learning curve.</p>
+  </div>
+
+  <!-- Slide 9: Validation -->
+  <div class="slide center">
+    <h2>If you're struggling with low-code,</h2>
+    <h1>that's normal.</h1>
+    <p style="margin-top: 1rem;">You're not stupid. The tools are harder than advertised.</p>
+  </div>
+
+  <!-- Slide 10: The Hire -->
+  <div class="slide">
+    <h2>So you think about hiring someone.</h2>
+    <p>A Salesforce admin to manage your tools.</p>
+    <table>
+      <tr>
+        <th>Role</th>
+        <th>Annual Cost</th>
+      </tr>
+      <tr>
+        <td>Salesforce Admin (junior)</td>
+        <td>$75,000 - $119,000</td>
+      </tr>
+      <tr>
+        <td>+ Benefits, HR, management</td>
+        <td class="dim">+ 30%</td>
+      </tr>
+      <tr>
+        <td>+ They only know Salesforce</td>
+        <td class="dim">—</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Slide 11: The Alternative -->
+  <div class="slide">
+    <h2>There's another option.</h2>
+    <table>
+      <tr>
+        <th>Option</th>
+        <th>Annual Cost</th>
+        <th>What You Get</th>
+      </tr>
+      <tr>
+        <td>Salesforce Admin</td>
+        <td>$75k+</td>
+        <td>One platform</td>
+      </tr>
+      <tr>
+        <td class="highlight">Embedded Partner</td>
+        <td class="highlight">$42,000</td>
+        <td class="highlight">Full business suite</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Slide 12: What You Get -->
+  <div class="slide">
+    <h2>The full business suite.</h2>
+    <div class="stack-list">
+      <div class="stack-item">
+        <div class="name">Twenty CRM</div>
+        <div class="desc">Your data, your infra</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Listmonk + Resend</div>
+        <div class="desc">Email campaigns</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Webstudio</div>
+        <div class="desc">Landing pages, same day</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Cal.com</div>
+        <div class="desc">Booking for your team</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Outline</div>
+        <div class="desc">SOPs, templates, docs</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Passbolt</div>
+        <div class="desc">Password management</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Stripe Integration</div>
+        <div class="desc">Payments in your site</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">Linear</div>
+        <div class="desc">Async communication</div>
+      </div>
+      <div class="stack-item">
+        <div class="name">IT Support</div>
+        <div class="desc">One call, one email</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 13: Why It Works -->
+  <div class="slide">
+    <h2>Why this is possible.</h2>
+    <ul>
+      <li>Same stack across all clients = expertise compounds</li>
+      <li>Infrastructure as code = no manual server management</li>
+      <li>Your data on your infrastructure = no vendor lock-in</li>
+      <li>I control updates = no surprise breaking changes</li>
+    </ul>
+  </div>
+
+  <!-- Slide 14: One Contact -->
+  <div class="slide center">
+    <h2>One phone number.</h2>
+    <h2>One email address.</h2>
+    <p style="margin-top: 2rem;">No "which vendor do I call for this?"</p>
+    <p>No support ticket queues.</p>
+    <p>One person who knows your whole system.</p>
+  </div>
+
+  <!-- Slide 15: The Choice -->
+  <div class="slide">
+    <h2>The choice isn't code vs no-code.</h2>
+    <p>It's <span class="highlight">understanding vs dependency</span>.</p>
+    <p style="margin-top: 2rem;">The low-code wizards aren't magicians.</p>
+    <p>They're programmers who learned a visual syntax.</p>
+    <p style="margin-top: 2rem;">If you're going to hire help anyway,<br>why limit yourself to one platform?</p>
+  </div>
+
+  <!-- Slide 16: Close -->
+  <div class="slide center">
+    <h1>$42,000 / year</h1>
+    <p>Full business suite. Embedded partner. No HR overhead.</p>
+    <p style="margin-top: 2rem; color: #f5f5f5;">Let's talk.</p>
+  </div>
+
+  <div class="progress">
+    <span id="current">1</span> / <span id="total">16</span>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    let current = 0;
+
+    function showSlide(index) {
+      slides.forEach(s => s.classList.remove('active'));
+      slides[index].classList.add('active');
+      document.getElementById('current').textContent = index + 1;
+    }
+
+    function next() {
+      if (current < slides.length - 1) {
+        current++;
+        showSlide(current);
+      }
+    }
+
+    function prev() {
+      if (current > 0) {
+        current--;
+        showSlide(current);
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const x = e.clientX;
+      const width = window.innerWidth;
+      if (x > width / 2) {
+        next();
+      } else {
+        prev();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') next();
+      if (e.key === 'ArrowLeft') prev();
+    });
+
+    document.getElementById('total').textContent = slides.length;
+  </script>
+
+</body>
+</html>
